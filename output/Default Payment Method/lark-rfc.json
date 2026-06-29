@@ -2,7 +2,7 @@
   "title": "RFC: Default Payment Method",
   "documentUrl": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb",
   "documentToken": "H7mudUYxloq8k3xjxiultUkCgTb",
-  "lastPushedAt": "2026-06-29T17:40:39.154Z",
+  "lastPushedAt": "2026-06-29T17:56:13.479Z",
   "lastResult": {
     "ok": true,
     "identity": "user",
@@ -10,12 +10,22 @@
       "document": {
         "new_blocks": [
           {
-            "block_id": "doxlgvMT0i1ckMl9MBztQyevyj4",
-            "block_token": "SsGtwS6rDhtP3SbLRSIlKMEagvc",
+            "block_id": "doxlguYurMynCH4PNqQbPiMXO5g",
+            "block_token": "WoHiwtcxGhaZ0pb3oRLlYQtQgQe",
+            "block_type": "whiteboard"
+          },
+          {
+            "block_id": "doxlgZEDsgCLhpFsQX5or1uhtIq",
+            "block_token": "ZE3xwnDFqhDSHZbkpCIllkjjgTo",
+            "block_type": "whiteboard"
+          },
+          {
+            "block_id": "doxlgwlRHbbBnDCrt2FYQIBdz5b",
+            "block_token": "YhSWwMMmxhTGlqb7W9elRs0Kged",
             "block_type": "whiteboard"
           }
         ],
-        "revision_id": 38,
+        "revision_id": 57,
         "url": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb"
       },
       "result": "success",
