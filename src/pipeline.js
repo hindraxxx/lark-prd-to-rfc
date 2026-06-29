@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { parseLarkUrl } from "./lark-url.js";
-import { ensurePrdMarkdown, markdownToLarkHtml, renderFromTemplate, titleFromMarkdown } from "./markdown.js";
+import { ensurePrdMarkdown, markdownToLarkHtml, markdownToLarkMarkdown, markdownToLarkXml, renderFromTemplate, titleFromMarkdown } from "./markdown.js";
 import { runConfiguredCommand } from "./shell.js";
 
 export async function pullPrd(options) {
@@ -56,15 +56,21 @@ export async function generateArtifacts(options) {
   const prdPath = join(options.outDir, "prd.md");
   const rfcPath = join(options.outDir, "rfc.md");
   const tasksPath = join(options.outDir, "tasks.md");
+  const larkMdPath = join(options.outDir, "rfc.lark.md");
+  const larkXmlPath = join(options.outDir, "rfc.lark.xml");
   const larkHtmlPath = join(options.outDir, "rfc.lark.html");
+  const larkMd = markdownToLarkMarkdown(rfcMarkdown);
+  const larkXml = markdownToLarkXml(rfcMarkdown);
   const larkHtml = markdownToLarkHtml(rfcMarkdown);
 
   await writeFile(prdPath, prdMarkdown + "\n", "utf8");
   await writeFile(rfcPath, rfcMarkdown + "\n", "utf8");
   await writeFile(tasksPath, tasksMarkdown + "\n", "utf8");
+  await writeFile(larkMdPath, larkMd + "\n", "utf8");
+  await writeFile(larkXmlPath, larkXml + "\n", "utf8");
   await writeFile(larkHtmlPath, larkHtml + "\n", "utf8");
 
-  return { prdPath, rfcPath, tasksPath, larkHtmlPath, source };
+  return { prdPath, rfcPath, tasksPath, larkMdPath, larkXmlPath, larkHtmlPath, source };
 }
 
 export async function generateLarkHtml(options) {
@@ -72,16 +78,31 @@ export async function generateLarkHtml(options) {
 
   const rfcMarkdown = await readFile(options.rfcFile, "utf8");
   const htmlPath = options.outFile ?? options.rfcFile.replace(/\.md$/i, ".lark.html");
+  const larkMdPath = htmlPath.replace(/\.lark\.html$/i, ".lark.md");
+  const larkXmlPath = htmlPath.replace(/\.lark\.html$/i, ".lark.xml");
+  const larkMd = markdownToLarkMarkdown(rfcMarkdown);
+  const larkXml = markdownToLarkXml(rfcMarkdown);
   const larkHtml = markdownToLarkHtml(rfcMarkdown);
 
+  await writeFile(larkMdPath, larkMd + "\n", "utf8");
+  await writeFile(larkXmlPath, larkXml + "\n", "utf8");
   await writeFile(htmlPath, larkHtml + "\n", "utf8");
 
-  return { htmlPath };
+  return { htmlPath, larkMdPath, larkXmlPath };
 }
 
 export async function pushRfc(options) {
   if (!options.htmlFile) throw new Error("Provide --html-file for push.");
-  const rfcFile = options.rfcFile ?? options.htmlFile.replace(/\.lark\.html$/i, ".md");
+  let rfcFile = options.rfcFile ?? options.htmlFile.replace(/\.lark\.html$/i, ".md");
+  const larkMdCandidate = rfcFile.replace(/\.md$/i, ".lark.md");
+  if (!options.rfcFile) {
+    try {
+      await readFile(larkMdCandidate, "utf8");
+      rfcFile = larkMdCandidate;
+    } catch {
+      // rfc.lark.md not found; fall back to rfc.md
+    }
+  }
   const stateFile = options.stateFile ?? join(dirname(rfcFile), "lark-rfc.json");
   const state = await readJsonIfExists(stateFile);
   const command = state?.documentUrl || state?.documentToken

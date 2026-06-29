@@ -57,7 +57,15 @@ flowchart TD
 
 ## API Changes
 
-TODO: List endpoint, request, response, auth, idempotency, and compatibility changes.
+TODO: For every impacted endpoint or outbound client, include the RFC contract:
+
+- Method and path.
+- Required and optional request headers.
+- Query params.
+- Request body schema or JSON example.
+- Response body schema or JSON example.
+- Error responses.
+- Auth, idempotency, compatibility, and downstream side effects.
 
 ## Data Model Changes
 

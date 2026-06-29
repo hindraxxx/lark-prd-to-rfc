@@ -41,5 +41,7 @@ fi
 node ./src/cli.js html --rfc-file "$rfc_file" --out-file "$html_file"
 
 echo ""
-echo "Regenerated Lark HTML:"
+echo "Regenerated Lark artifacts:"
 echo "  $html_file"
+echo "  ${html_file%.lark.html}.lark.md"
+echo "  ${html_file%.lark.html}.lark.xml"

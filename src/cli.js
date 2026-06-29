@@ -36,6 +36,8 @@ async function main() {
     console.log(`- PRD: ${result.prdPath}`);
     console.log(`- RFC: ${result.rfcPath}`);
     console.log(`- Tasks: ${result.tasksPath}`);
+    console.log(`- Lark Markdown: ${result.larkMdPath}`);
+    console.log(`- Lark XML: ${result.larkXmlPath}`);
     console.log(`- Lark HTML: ${result.larkHtmlPath}`);
 
     if (result.source.label.startsWith("http")) {
@@ -64,6 +66,8 @@ async function main() {
     });
 
     console.log("Generated Lark HTML:");
+    console.log(`- Lark Markdown: ${result.larkMdPath}`);
+    console.log(`- Lark XML: ${result.larkXmlPath}`);
     console.log(`- Lark HTML: ${result.htmlPath}`);
     return;
   }

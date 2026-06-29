@@ -1,6 +1,6 @@
 ---
 name: prd-to-rfc
-description: Convert a Lark PRD into local PRD/RFC/task Markdown artifacts, regenerate Lark-ready HTML after edits, and optionally push the RFC through a configured Lark CLI command.
+description: Convert a Lark PRD into local PRD/RFC/task Markdown artifacts, regenerate Lark-ready XML/HTML after edits, and optionally push the RFC through a configured Lark CLI command.
 allowed-tools: Bash, Read, Write, Edit
 ---
 
@@ -39,7 +39,7 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
    - Convert product requirements into engineering implications.
    - Use the requested scope to focus the RFC on backend, frontend, QA, data/analytics, release, or any other named implementation area.
    - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC and fill the Repository Analysis table with file-backed conclusions.
-   - Include a Mermaid diagram in the System Design section. Prefer a flowchart or sequence diagram that reflects the actual repository boundaries and data/control flow.
+   - Include a Mermaid diagram in the System Design section using a standard ` ```mermaid ` fenced code block. The harness auto-converts this to a Lark `<whiteboard type="mermaid">` block in `rfc.lark.xml` for native rendering. Prefer a flowchart or sequence diagram that reflects the actual repository boundaries and data/control flow.
    - Include non-goals, API changes, data model changes, edge cases, observability, rollout, risks, and open questions.
    - Include the implementation task checklist at the bottom of the RFC so reviewers can see the work breakdown without opening `tasks.md`.
 
@@ -49,7 +49,7 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
    - Each task should include acceptance criteria.
 
 6. Push back to Lark only after the Markdown is reviewable.
-   - Push uses `rfc.md` with `lark-cli docs +create --doc-format markdown` by default.
+   - Push uses `rfc.lark.xml` (Lark XML with tables and `<whiteboard type="mermaid">` blocks) with `lark-cli docs +create --doc-format xml` by default.
    - First push creates `output/<session>/lark-rfc.json` with the Lark RFC URL/token.
    - Later pushes update the saved RFC doc with `lark-cli docs +update --command overwrite`.
    - Use `PRD_TO_RFC_SKIP_PUSH=1` when the user only wants local artifacts.
@@ -69,7 +69,7 @@ User gives Lark PRD URL
   -> agent reports Lark RFC URL from push output
 ```
 
-After editing `rfc.md`, regenerate only the Lark HTML:
+After editing `rfc.md`, regenerate the Lark-ready XML, Markdown, and HTML preview:
 
 ```bash
 regenerate_rfc "<session-name>"

@@ -5,7 +5,7 @@ Lark-CLI-first workflow for turning a Lark PRD into:
 1. a normalized PRD Markdown file,
 2. an RFC Markdown draft with repository analysis, a Mermaid system diagram, and an implementation task checklist,
 3. a task breakdown Markdown file,
-4. a Lark-friendly HTML artifact,
+4. a Lark-friendly XML artifact plus HTML preview,
 5. and a pushed Lark RFC document through Lark CLI command hooks.
 
 ## Current Shape
@@ -20,8 +20,8 @@ You
   -> CLI gets PRD from Lark
   -> agent/CLI creates prd.md, rfc.md, tasks.md
   -> agent improves rfc.md with repository-backed analysis, Mermaid design, and bottom-of-RFC tasks
-  -> CLI converts rfc.md into rfc.lark.html
-  -> CLI pushes HTML into a new Lark RFC doc
+  -> CLI converts rfc.md into rfc.lark.xml + rfc.lark.html
+  -> CLI pushes XML into a new Lark RFC doc
 ```
 
 ## Quick Demo
@@ -154,11 +154,13 @@ From an existing local PRD file:
 prd_to_rfc --from-file ./examples/sample-prd.md demo
 ```
 
-After manually editing `rfc.md`, regenerate only the Lark HTML:
+After manually editing `rfc.md`, regenerate the Lark XML and local HTML preview:
 
 ```bash
 regenerate_rfc demo
 ```
+
+This regenerates `rfc.lark.xml` (the reliable Lark import artifact), `rfc.lark.md` (Markdown reference), and `rfc.lark.html` (local browser preview). Do not use browser copy/paste as the transport for Lark-specific blocks; push/import `rfc.lark.xml` with `lark-cli`.
 
 Then push the refreshed RFC to Lark:
 
@@ -190,13 +192,13 @@ node ./src/cli.js generate \
   --context ./rfc-context.md
 ```
 
-Push the generated RFC Markdown back to Lark:
+Push the generated RFC XML back to Lark:
 
 ```bash
-PRD_TO_RFC_PUSH_CMD='lark-cli docs +create --doc-format markdown --title "{{title}}" --content @output/my-prd/rfc.md' \
+PRD_TO_RFC_PUSH_CMD='lark-cli docs +create --doc-format xml --title "{{title}}" --content @{{rfc_file}}' \
   node ./src/cli.js push \
   --html-file ./output/my-prd/rfc.lark.html \
-  --rfc-file ./output/my-prd/rfc.md \
+  --rfc-file ./output/my-prd/rfc.lark.xml \
   --title "RFC: My Feature"
 ```
 
@@ -204,14 +206,14 @@ Standard commands:
 
 ```bash
 lark-cli docs +fetch --doc "<url>" --doc-format markdown --jq ".data.document.content"
-lark-cli docs +create --doc-format markdown --title "<title>" --content @output/<session>/rfc.md
-lark-cli docs +update --doc "<saved-rfc-url>" --command overwrite --doc-format markdown --content @output/<session>/rfc.md
+lark-cli docs +create --doc-format xml --title "<title>" --content @output/<session>/rfc.lark.xml
+lark-cli docs +update --doc "<saved-rfc-url>" --command overwrite --doc-format xml --content @output/<session>/rfc.lark.xml
 ```
 
 Override hooks remain available:
 
 - `PRD_TO_RFC_FETCH_CMD` must print PRD content to stdout.
-- `PRD_TO_RFC_PUSH_CMD` must create/update a Lark document. For `lark-cli`, use `{{rfc_file}}` with `--doc-format markdown`.
+- `PRD_TO_RFC_PUSH_CMD` must create/update a Lark document. For `lark-cli`, use `{{rfc_file}}` with `--doc-format xml`.
 - `PRD_TO_RFC_UPDATE_CMD` can override updates to an existing saved RFC doc.
 - `LARK_CLI_BIN` can override the required Lark CLI binary name/path; auto-detect checks `lark-cli` then `lark`.
 - `PRD_TO_RFC_SKIP_PUSH=1` disables automatic Lark doc creation.
