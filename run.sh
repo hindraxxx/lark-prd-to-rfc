@@ -6,7 +6,7 @@ usage() {
 Usage:
   prd_to_rfc <lark-prd-url> [session-name] [--scope <area>] [--context <context.md>]
   prd_to_rfc --from-file <prd.md> [session-name] [--scope <area>] [--context <context.md>]
-  prd_to_rfc --html <out-dir-or-rfc.md>
+  prd_to_rfc --html <out-dir-or-rfc.lark.xml>
   prd_to_rfc --push <out-dir-or-html-file>
 
 Optional env:
@@ -53,14 +53,14 @@ if [[ "$input" == "--html" ]]; then
 
   target="$2"
   if [[ -d "$target" ]]; then
-    rfc_file="$target/rfc.md"
+    xml_file="$target/rfc.lark.xml"
     html_file="$target/rfc.lark.html"
   else
-    rfc_file="$target"
-    html_file="${target%.md}.lark.html"
+    xml_file="$target"
+    html_file="${target%.lark.xml}.lark.html"
   fi
 
-  node ./src/cli.js html --rfc-file "$rfc_file" --out-file "$html_file"
+  node ./src/cli.js html --xml-file "$xml_file" --out-file "$html_file"
   echo ""
   echo "Regenerated Lark HTML:"
   echo "  $html_file"
@@ -188,8 +188,8 @@ else
     echo "Missing required Lark CLI for push. Expected lark-cli or lark on PATH." >&2
     exit 1
   fi
-  export PRD_TO_RFC_PUSH_CMD="$lark_bin docs +create --doc-format xml --title \"{{title}}\" --content @{{rfc_file}}"
-  export PRD_TO_RFC_UPDATE_CMD="$lark_bin docs +update --doc \"{{doc}}\" --command overwrite --doc-format xml --content @{{rfc_file}}"
+  export PRD_TO_RFC_PUSH_CMD="$lark_bin docs +create --doc-format xml --title \"{{title}}\" --content @\"{{rfc_file}}\""
+  export PRD_TO_RFC_UPDATE_CMD="$lark_bin docs +update --doc \"{{doc}}\" --command overwrite --doc-format xml --content @\"{{rfc_file}}\""
   title="${RFC_TITLE:-RFC: $(basename "$out_dir")}"
   node ./src/cli.js push --html-file "$out_dir/rfc.lark.html" --rfc-file "$out_dir/rfc.lark.xml" --state-file "$out_dir/lark-rfc.json" --title "$title"
 fi

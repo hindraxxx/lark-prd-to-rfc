@@ -1,8 +1,8 @@
-# RFC: {{title}}
+# RFC: Sample Wallet Limit PRD
 
 Status: Draft
-Source PRD: {{source}}
-Requested Change Scope: {{scope}}
+Source PRD: ./examples/sample-prd.md
+Requested Change Scope: TODO: Backend, Frontend, QA, Data / Analytics, Release, or another explicit area.
 
 ## Glossary
 
@@ -16,9 +16,39 @@ TODO: Summarize why this feature exists and what product outcome it should creat
 
 ## Product Requirements Summary
 
-Source: {{source}}
+Source: ./examples/sample-prd.md
 
-{{prd}}
+# Sample Wallet Limit PRD
+
+Source: ./examples/sample-prd.md
+
+## Background
+
+Users need a safer way to control wallet spending limits for daily transactions.
+
+## Goals
+
+- Allow users to configure a daily wallet spend limit.
+- Block wallet payments that exceed the configured limit.
+- Notify users when a payment is blocked by the limit.
+
+## Requirements
+
+- Users can view current daily limit.
+- Users can update the daily limit once every 24 hours.
+- The default limit is inherited from the existing risk profile.
+- Blocked payments should show a clear reason.
+
+## Metrics
+
+- Reduce high-risk wallet transactions.
+- Track limit update completion rate.
+- Track payment blocks caused by daily limits.
+
+## Open Questions
+
+- Should support agents be able to override limits?
+- Does the 24-hour update cooldown reset on failed update attempts?
 
 ## Current State
 
@@ -42,20 +72,24 @@ TODO: Describe the recommended implementation approach. Call out what we will be
 
 ## Implementation Context
 
-{{context}}
+TODO: Add repository context before finalizing the RFC. Example:
+
+- Backend: `/path/to/repo-a` owns user APIs and user domain changes.
+- Frontend: `/path/to/repo-b` owns settings UI and user-facing copy.
+- Shared contracts: `/path/to/repo-c` owns generated API clients or schemas.
 
 ## System Design
 
 TODO: Capture services, data flow, sequence, and ownership boundaries.
 
-```mermaid
+<whiteboard type="mermaid">
 flowchart TD
   PRD[Product requirement] --> RFC[Engineering RFC]
   RFC --> RepoAnalysis[Repository analysis]
   RepoAnalysis --> Design[Proposed design]
   Design --> Implementation[Implementation tasks]
   Implementation --> Rollout[Rollout and validation]
-```
+</whiteboard>
 
 ## User Story: TODO-001 — [Story Title]
 
@@ -153,3 +187,4 @@ TODO: Jot down the conclusion of the RFC review meeting discussion.
 | Date | Notes |
 | --- | --- |
 | TODO: date | **Attendees:** TODO: add attendees. **Meeting notes:** TODO: add notes. |
+

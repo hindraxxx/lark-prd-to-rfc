@@ -1,0 +1,375 @@
+<title>RFC: Default Payment Method (Backend — Credit Application, Post-Credit & Setting Page)</title>
+<table>
+<colgroup><col/><col/></colgroup>
+<tbody>
+<tr><td><p>Authors</p></td><td><p>Liem Hindra Sanjaya (GPL Engagement tech)</p></td></tr>
+<tr><td><p>Reviewers</p></td><td><p>Licco; Song Xiaoliang; Thomas Putra</p></td></tr>
+<tr><td><p>Approvers</p></td><td><p>Andreas Santo Pen (Decider); Ignes Olivia (Accountable)</p></td></tr>
+<tr><td><p>Linked PRD</p></td><td><p><a href="https://gotocompany.sg.larksuite.com/docx/KLxndxHSdoV5NbxbrntlWoMogGe">Mini PRD: Set GoPay Later as Default Payment Method across flows</a> (local mirror: <code>output/Default Payment Method/prd.md</code>)</p></td></tr>
+<tr><td><p>Requested Change Scope</p></td><td><p>Backend only. Covers (1) credit-application flow opt-in capture, (2) post-credit application of the default, and (3) the setting-page read/write API. Transaction-flow nudge (PRD §B, US5–US9) is explicitly excluded.</p></td></tr>
+<tr><td><p>Scope</p></td><td><checkbox done="true"><code>NEW_FEATURE</code></checkbox><checkbox done="true"><code>SYSTEM_CHANGE</code></checkbox><checkbox done="true"><code>INTEGRATION</code></checkbox><checkbox done="false"><code>DEPRECATION</code></checkbox><checkbox done="false"><code>DATA_MIGRATION</code></checkbox><checkbox done="false"><code>PROD_BUG</code></checkbox></td></tr>
+<tr><td><p>Pod</p></td><td><p>GoPay Later Engagement</p></td></tr>
+<tr><td><p>Stream</p></td><td><p>GPL User Service / BFF</p></td></tr>
+<tr><td><p>Status</p></td><td><checkbox done="true"><b>DRAFT</b></checkbox><checkbox done="false"><b>IN REVIEW</b></checkbox><checkbox done="false"><b>PUBLISHED</b></checkbox><checkbox done="false"><b>ABANDONED</b></checkbox></td></tr>
+<tr><td><p>Impact</p></td><td><checkbox done="false"><b>LOW</b></checkbox><checkbox done="true"><b>MEDIUM</b></checkbox><checkbox done="false"><b>HIGH</b></checkbox></td></tr>
+<tr><td><p>Outcome</p></td><td><p>Default-payment-method setting owned by <code>paylater-user-service</code>; BFF orchestrates read/write; <code>lending-adapter</code> triggers application on credit-approval callback.</p></td></tr>
+<tr><td><p>Created Date</p></td><td><p>2026-06-30</p></td></tr>
+<tr><td><p>Closing Date</p></td><td><p>TODO</p></td></tr>
+<tr><td><p>Documents</p></td><td><ul><li>PRD (Lark)</li><li>Local PRD mirror: <code>output/Default Payment Method/prd.md</code></li></ul></td></tr>
+</tbody>
+</table>
+<h1>Glossary</h1>
+<table>
+<colgroup><col/><col/></colgroup>
+<tbody>
+<tr><td><p><b>Term</b></p></td><td><p><b>Definition</b></p></td></tr>
+<tr><td><p>GPL</p></td><td><p>GoPay Later (the pay-later product this RFC concerns).</p></td></tr>
+<tr><td><p>Default Payment Method</p></td><td><p>A per-user, per-platform flag indicating GPL should be the pre-selected payment instrument on Gojek / GoPay checkout surfaces.</p></td></tr>
+<tr><td><p>Virgin user</p></td><td><p>A GPL-whitelisted user who has not yet submitted / been approved for a credit application.</p></td></tr>
+<tr><td><p>Post-credit flow</p></td><td><p>The side-effect chain that runs after a credit-application-success callback is received by <code>lending-adapter</code>.</p></td></tr>
+<tr><td><p>paylater-user-service</p></td><td><p>Java 21 / Spring Boot 3.5 service owning per-user GPL data (DDL module <code>gtfpaylater</code>). DDD layout: <code>shared/infrastructure/domain/application/web/scheduler</code>.</p></td></tr>
+<tr><td><p>gpl-bff</p></td><td><p>Kotlin / Spring Boot 3.1 WebFlux BFF. Reactive Feign clients. Owns client-facing orchestration only.</p></td></tr>
+<tr><td><p>lending-adapter</p></td><td><p>Kotlin / Spring Boot 2.7 WebFlux adapter that receives the upstream lender (BizEnd/MAB) credit-application callback and runs the post-credit flow.</p></td></tr>
+<tr><td><p>DEFAULT_PAYMENT_OPTION</p></td><td><p>Existing enum value in <code>gpl-bff</code> <code>UserSettingFeature</code> and a disabled entry in <code>toggle-configs.json</code> — scaffolding this RFC activates.</p></td></tr>
+</tbody>
+</table>
+<h1>Background</h1>
+<p>GoPay Later is live in QRIS (CPM since Sep 2025; MPM ON-US Jan; OFF-US Feb). As of April there are 485k eligible users but only 11% adopted. The PRD wants to grow adoption by letting users set GPL as their <b>default payment method</b> across three flows: acquisition, transaction, and account-management (settings).</p>
+<p>This RFC is scoped to the <b>backend</b> work for two of those three flows — the <b>credit-application / post-credit</b> flow and the <b>setting page</b> — and explicitly excludes the transaction nudge flow (PRD §B, US5–US9). The transaction nudge is tracked separately and will consume the read API defined here.</p>
+<p><b>Key ownership decision (per engineering context):</b> the GPL default-payment-method setting is owned by <code>paylater-user-service</code>. We will <b>not</b> call GoPay APIs to store or read this setting; GoPay-side checkout propagation is handled by a separate integration (see Open Questions).</p>
+<h1>Product Requirements Summary (scoped)</h1>
+<p>Source: <code>output/Default Payment Method/prd.md</code> (full PRD). Only the in-scope backend-relevant user stories are summarised below.</p>
+<table>
+<colgroup><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>PRD Story</b></p></th><th><p><b>Backend requirement (this RFC)</b></p></th><th><p><b>In scope?</b></p></th></tr></thead>
+<tbody>
+<tr><td><p>US1 — Acquisition review page toggle</p></td><td><p>Persist the user's opt-in decision at credit-application <b>submit</b> time (before approval). Toggle off by default.</p></td><td><p>Yes</p></td></tr>
+<tr><td><p>US2 — Modulo experiment logic</p></td><td><p>Backend assigns Treatment 1 / 2 via <code>gojek_customer_id % 2</code>; configurable rollout 50% → 100%; global kill-switch.</p></td><td><p>Yes</p></td></tr>
+<tr><td><p>US3 — Post-approval screen toggle</p></td><td><p>On credit-application-success callback, apply the cached opt-in (from US1) as the live default. If the user toggles on the post-approval screen instead, persist that decision too.</p></td><td><p>Yes</p></td></tr>
+<tr><td><p>US4 — Approved users who already set default</p></td><td><p>Read API returns <code>default = true</code> so clients render GPL pre-selected / labelled "Default".</p></td><td><p>Yes (read side)</p></td></tr>
+<tr><td><p>US5–US9 — Transaction nudge flow</p></td><td><p>Cache-on-confirm, risk-reject handling, PN fallback, backward compatibility.</p></td><td><p><b>No — excluded</b> (separate RFC). Reuses the read/write API defined here.</p></td></tr>
+<tr><td><p>US10 — Set default from GPL homepage / settings</p></td><td><p>Write API: user toggles GPL default on/off from the GPL settings screen.</p></td><td><p>Yes</p></td></tr>
+<tr><td><p>US11 — Real-time fetch of default status</p></td><td><p>Read API: BFF returns the current default status real-time. <b>Deviation:</b> source of truth is <code>paylater-user-service</code>, not GoPay (see Open Questions OQ-1).</p></td><td><p>Yes</p></td></tr>
+<tr><td><p>US12 — Overwrite previous default</p></td><td><p>Setting GPL as default overwrites any prior default; next GoPay transaction uses GPL. Propagation to GoPay checkout widget is out of scope here.</p></td><td><p>Yes (setting side only)</p></td></tr>
+</tbody>
+</table>
+<h1>Current State</h1>
+<p>Detailed, file-backed findings per repository are in the <b>Repository Analysis</b> section below. Summary:</p>
+<ul>
+<li><b>No default-payment-method storage exists anywhere.</b> Neither <code>paylater-user-service</code>, <code>gpl-bff</code>, nor <code>lending-adapter</code> has a table, column, entity, DTO, or endpoint for a user-level default payment method.</li>
+<li><b>gpl-bff already has scaffolding.</b> <code>UserSettingFeature.DEFAULT_PAYMENT_OPTION</code> and a <code>toggle-configs.json</code> entry exist but are <code>show:false</code>. The <code>PATCH /account-management/settings/toggle</code> path currently writes to the <b>bizend</b> (<code>/internal/account-management/settings</code>), not to <code>paylater-user-service</code>.</li>
+<li><b>gpl-bff → paylater-user-service client exists</b> but exposes only one method (SSOF eligibility). The base URL is configured (<code>gpl-paylater-user-service.base-url</code>).</li>
+<li><b>lending-adapter</b> receives the credit-application-success callback at <code>POST /lending/internal/credit-application/callback</code> and runs a post-credit flow that already calls <code>gpl-bff</code> <code>/internal/credit-application/callback</code>. It does <b>not</b> call <code>paylater-user-service</code> today.</li>
+<li><b>paylater-user-service</b> has no inbound credit-success listener; the only post-credit-success hook is the synchronous <code>upsertUserInfo</code> path driven by an upstream REST call. Schema changes are applied outside the repo (no Flyway/Liquibase files).</li>
+</ul>
+<h1>Repository Analysis</h1>
+<p>Findings are file-backed. Paths are relative to each repo root unless prefixed with <code>~/project/</code>.</p>
+<h2>paylater-user-service (Java 21, Spring Boot 3.5, MySQL + MyBatis-Plus, RabbitMQ, OpenFeign)</h2>
+<p><b>Repo:</b> <code>~/project/paylater-user-service/</code> &nbsp;|&nbsp; <b>Build:</b> <code>build.gradle:3-5,180-184</code> (Spring Boot 3.5.0, Spring Cloud 2025.0.0, JDK 21) &nbsp;|&nbsp; <b>Layout:</b> <code>settings.gradle:3-8</code> declares <code>shared, infrastructure, domain, application, web, scheduler</code> (note: <code>domain</code> depends on <code>infrastructure</code> — inverted DDD, <code>domain/build.gradle:6</code>).</p>
+<table>
+<colgroup><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>Concern</b></p></th><th><p><b>Finding</b></p></th><th><p><b>Evidence</b></p></th></tr></thead>
+<tbody>
+<tr><td><p>Default payment method today</p></td><td><p><b>None.</b> No table/column/entity/endpoint. Repo-wide search for <code>defaultPayment|default_payment|PaymentMethod|paymentChannel</code> returns zero source matches.</p></td><td><p>—</p></td></tr>
+<tr><td><p>Closest existing payment concept</p></td><td><p>Repayment channel/method — recorded <b>per-repayment-event</b>, not per-user.</p></td><td><p><code>infrastructure/.../entity/po/gtfpaylater/RepaymentPO.java:89-94</code>; <code>shared/.../enums/MABRepaymentChannelEnum.java:11-17</code> (values incl. <code>GOPAY</code>); <code>shared/.../enums/MABRepaymentMethodEnum.java:9-11</code></p></td></tr>
+<tr><td><p>Per-user config storage today</p></td><td><p>Flat columns on <code>user_info</code> (<code>gopay_user_id</code>, <code>bill_day</code>, <code>pay_day</code>, <code>account_status</code>). <b>No</b> <code>user_setting</code>/<code>preference</code> table exists.</p></td><td><p><code>infrastructure/.../entity/po/gtfpaylater/UserInfoPO.java:21-82</code>; <code>infrastructure/src/main/resources/mapper/gtfpaylater/UserInfoMapper.xml:1-149</code></p></td></tr>
+<tr><td><p>credit_application table</p></td><td><p>Stores status, <code>callback_status</code>, <code>type</code> (CREATE/INCREASE), <code>external_platform_id</code>. Read-only domain service — <b>no event publish, no listener</b>.</p></td><td><p><code>infrastructure/.../entity/po/gtfpaylater/CreditApplicationPO.java:21-99</code>; <code>domain/.../service/user/impl/CreditApplicationDomainServiceImpl.java:31-83</code></p></td></tr>
+<tr><td><p>Closest post-credit-success hook</p></td><td><p>Synchronous <code>upsertUserInfo</code> triggered by upstream REST <code>POST /user-service/internal/user/user-info</code>; on <code>creditStatus == SUCCESS</code> updates the existing <code>user_info</code> row.</p></td><td><p><code>application/.../service/impl/UserInfoServiceImpl.java:60-80</code>; <code>web/.../controller/internal/UserInfoInternalController.java:36-44</code></p></td></tr>
+<tr><td><p>GoPay client</p></td><td><p>GoToPin-only (PIN challenge/verify). <b>No</b> method to list payment methods or read/write a default — consistent with owning this setting locally.</p></td><td><p><code>infrastructure/.../feign/GopayFeignClient.java:13-24</code>; <code>infrastructure/.../feign/impl/GopayFeignClientService.java:17-84</code></p></td></tr>
+<tr><td><p>Existing internal REST pattern</p></td><td><p>Internal controllers under <code>/user-service/internal/...</code>. Partner-specific controllers gated by <code>@ConditionalOnPartner</code> (<code>GTFPAYLATER|TTPL|TTPL_RISK_SHARE</code>).</p></td><td><p><code>web/.../controller/internal/UserInfoInternalController.java:19-22</code>; <code>shared/.../annotation/ConditionalOnPartner.java</code>; <code>web/src/main/resources/application.yml:108-127</code></p></td></tr>
+<tr><td><p>Async messaging</p></td><td><p>RabbitMQ only (no Kafka). 3 inbound consumers, all TTPL repayment/risk — <b>none</b> for credit-application-success.</p></td><td><p><code>build.gradle:23</code>; <code>infrastructure/.../config/mq/RabbitMQConfig.java:31-99</code>; <code>scheduler/.../biz/line/ttpl/consumer/TTPLRepaymentResultConsumer.java:61-71</code></p></td></tr>
+<tr><td><p>Schema management</p></td><td><p><b>No Flyway / Liquibase / .sql files.</b> DDL implied by MyBatis-Plus <code>@TableName</code>/<code>@TableField</code>. Migrations applied out-of-repo.</p></td><td><p>glob <code>**/*.sql</code> → none; <code>infrastructure/.../config/datasource/GtfpaylaterDatasourceConfig.java:55</code> (<code>DbType.MYSQL</code>)</p></td></tr>
+<tr><td><p>Inter-service comms</p></td><td><p>Spring Cloud OpenFeign (15 clients). No gRPC.</p></td><td><p><code>build.gradle:90</code>; <code>infrastructure/.../feign/*.java</code></p></td></tr>
+</tbody>
+</table>
+<h2>gpl-bff (Kotlin 1.7, Spring Boot 3.1 WebFlux, Reactive Feign, R2DBC/Postgres)</h2>
+<p><b>Repo:</b> <code>~/project/gpl-bff/</code> &nbsp;|&nbsp; <b>Build:</b> <code>build.gradle:4-7,17</code> (Spring Boot 3.1.2, Kotlin 1.7.22, JDK 17, WebFlux + Reactive Feign 4.0.0) &nbsp;|&nbsp; <b>App:</b> <code>src/main/kotlin/com/gofin/gpl/bff/</code>.</p>
+<table>
+<colgroup><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>Concern</b></p></th><th><p><b>Finding</b></p></th><th><p><b>Evidence</b></p></th></tr></thead>
+<tbody>
+<tr><td><p>Settings entry point</p></td><td><p><b>Already exists.</b> <code>GET /account-management/settings/toggles</code> + <code>PATCH /account-management/settings/toggle</code>.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/controller/UserSettingsController.kt:17,19-29,31-38</code></p></td></tr>
+<tr><td><p>DEFAULT_PAYMENT_OPTION scaffolding</p></td><td><p>Enum value <b>already declared</b>; static config entry exists but <code>show:false</code>.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/dto/SettingDto.kt:24</code>; <code>src/main/resources/toggle-configs.json:20-37</code></p></td></tr>
+<tr><td><p>Current write target (wrong for us)</p></td><td><p><code>PATCH /toggle</code> writes to <b>bizend</b> <code>/internal/account-management/settings</code>, not to <code>paylater-user-service</code>. <code>mapBizendSettingsToUserFeature</code> does not map <code>DEFAULT_PAYMENT_OPTION</code>.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/service/ToggleSettingService.kt:91-112,114-121,123-135</code>; <code>src/main/kotlin/com/gofin/gpl/bff/client/BizEndClient.kt:152,330-355</code></p></td></tr>
+<tr><td><p>paylater-user-service client</p></td><td><p>Exists, Reactive Feign, single method (SSOF). Base URL env-driven.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/client/GplPaylaterUserServiceClient.kt:9-19</code>; <code>src/main/resources/application.yml:297-298</code></p></td></tr>
+<tr><td><p>Aggregation pattern to mirror</p></td><td><p><code>fetchToggles</code> resolves gofinId via identity-info, fetches persisted settings, zips SSOF eligibility, merges static config — exactly the pattern to extend for the default-payment-method toggle.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/service/ToggleSettingService.kt:58-89</code>; <code>src/main/kotlin/com/gofin/gpl/bff/service/SsofService.kt:15-37</code></p></td></tr>
+<tr><td><p>Credit-application callback (inbound from lending-adapter)</p></td><td><p><code>POST /internal/credit-application/callback</code> → push notification today. This is the endpoint lending-adapter already calls in its post-credit flow.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/controller/InternalController.kt:31,40-64</code>; <code>src/main/kotlin/com/gofin/gpl/bff/service/CreditApplicationCallbackService.kt:28-54</code></p></td></tr>
+<tr><td><p>ID resolution / context propagation</p></td><td><p>Inbound <code>x-user-id</code> header → identity-info <code>POST /lending/v1/user/identity-info</code> → <code>IdentityInfoData(gofinId, gojekCustomerId, gojekGopayAccountId, ...)</code>. Outbound headers forwarded explicitly per Feign method.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/service/GofinUserService.kt:22-103</code>; <code>src/main/kotlin/com/gofin/gpl/bff/client/IdentityInfoWebClient.kt:19</code>; <code>src/main/kotlin/com/gofin/gpl/bff/dto/IdentityInfoData.kt:3-11</code></p></td></tr>
+<tr><td><p>Response envelope &amp; errors</p></td><td><p><code>RestApiResponse&lt;T&gt;</code> sealed type; <code>WebClientException(BffError)</code> from per-client error decoders; global advice in <code>GlobalRestExceptionHandler</code>.</p></td><td><p><code>src/main/kotlin/com/gofin/gpl/bff/model/RestApiResponse.kt:5-23</code>; <code>src/main/kotlin/com/gofin/gpl/bff/exception/BffException.kt:5-81</code>; <code>src/main/kotlin/com/gofin/gpl/bff/config/GplPaylaterUserServiceClientConfiguration.kt:14-49</code></p></td></tr>
+</tbody>
+</table>
+<h2>lending-adapter (Kotlin 1.6, Spring Boot 2.7 WebFlux, WebClient, R2DBC/MySQL, Kafka)</h2>
+<p><b>Repo:</b> <code>~/project/lending-adapter/</code> &nbsp;|&nbsp; <b>Build:</b> <code>build.gradle.kts:4,6-7,19,30</code> (Spring Boot 2.7.12, Kotlin 1.6.21, JDK 17, WebFlux, reactor-kafka) &nbsp;|&nbsp; <b>App:</b> <code>src/main/kotlin/com/gofin/cleo/lendingadapter/</code>; web base-path <code>/lending</code> (<code>application.yaml:143-144</code>).</p>
+<table>
+<colgroup><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>Concern</b></p></th><th><p><b>Finding</b></p></th><th><p><b>Evidence</b></p></th></tr></thead>
+<tbody>
+<tr><td><p>Credit-application-success callback</p></td><td><p><code>POST /lending/internal/credit-application/callback</code>. Resolves <code>GofinUser</code> by accountId, dispatches to a <code>CreditApplicationServiceV2</code> by <code>applicationType</code>.</p></td><td><p><code>src/main/kotlin/com/gofin/cleo/lendingadapter/controller/InternalController.kt:48,63-119</code>; <code>src/main/kotlin/com/gofin/cleo/lendingadapter/service/v2/CreditApplicationServiceV2.kt:70-76</code></p></td></tr>
+<tr><td><p>Post-credit flow (PKYC)</p></td><td><p>Updates <code>gofinUser</code> state, then runs 3 side-effects <b>in parallel</b> via <code>Mono.zip</code>: Tokopedia callback, Kafka <code>CREDIT_APPLICATION_RESULT</code> publish, and <b>GPL BFF callback</b> <code>POST /internal/credit-application/callback</code>. <b>No default-payment-method step exists today.</b></p></td><td><p><code>src/main/kotlin/com/gofin/cleo/lendingadapter/service/v2/PKYCCreditApplicationService.kt:641-701,751-806</code>; <code>src/main/kotlin/com/gofin/cleo/lendingadapter/service/v2/CreditApplicationServiceV2.kt:383-412</code></p></td></tr>
+<tr><td><p>GPL BFF client</p></td><td><p>WebClient <code>gplBffClient</code>, <code>submitCreditResult(...)</code> with circuit breaker. Base URL configured.</p></td><td><p><code>src/main/kotlin/com/gofin/cleo/lendingadapter/client/GopayLaterBffClient.kt:22-35,37-92</code>; <code>application.yaml:101</code>; <code>src/main/kotlin/com/gofin/cleo/lendingadapter/config/Config.kt:905</code></p></td></tr>
+<tr><td><p>paylater-user-service client</p></td><td><p><b>None.</b> No client, no configured URL. Closest GoPay-side downstream is <code>gpl-bff.base-url</code>.</p></td><td><p>search <code>paylater-user|PaylaterUser</code> → only local <code>GofinUserService</code></p></td></tr>
+<tr><td><p>Idempotency on callback</p></td><td><p><b>None.</b> No dedup table/lock; <code>CallbackData.hasReceived</code> is metadata-only, never read to short-circuit. Duplicate callback re-runs the whole flow.</p></td><td><p><code>src/main/kotlin/com/gofin/cleo/lendingadapter/data/CreditApplication.kt:28-32</code>; <code>src/main/kotlin/com/gofin/cleo/lendingadapter/service/v2/CreditApplicationServiceV2.kt:232-236,264-289</code></p></td></tr>
+<tr><td><p>Kafka topics published</p></td><td><p><code>CREDIT_APPLICATION_RESULT</code> = <code>com.gofin.cl.cicil.applicationResult</code> (protobuf <code>ApplicationResultEvent</code>).</p></td><td><p><code>src/main/kotlin/com/gofin/cleo/lendingadapter/service/KafkaService.kt:73-82</code>; <code>src/main/kotlin/com/gofin/cleo/lendingadapter/service/v2/CreditApplicationServiceV2.kt:108-146</code></p></td></tr>
+<tr><td><p>openspec / .opencode</p></td><td><p>Both scaffolded but empty. No existing callback API spec.</p></td><td><p><code>openspec/specs/</code>, <code>openspec/changes/*</code> — empty; <code>.opencode/skills/my-skill/</code> — empty</p></td></tr>
+</tbody>
+</table>
+<h1>Desired State</h1>
+<ul>
+<li><code>paylater-user-service</code> owns a new <code>user_default_payment_setting</code> table (MySQL, <code>gtfpaylater</code> datasource) keyed by gofin/gopay user id, storing <code>is_default_enabled</code>, <code>opt_in_source</code> (ONBOARDING_REVIEW / POST_APPROVAL / SETTINGS_PAGE), <code>treatment_group</code>, and audit timestamps.</li>
+<li>Two new internal endpoints on <code>paylater-user-service</code>: a read (<code>GET</code>) and an idempotent write/apply (<code>POST</code>) for the default-payment-method setting, under <code>/user-service/internal/user/default-payment-method</code>.</li>
+<li><code>gpl-bff</code> <code>GET /account-management/settings/toggles</code> additionally fetches the default-payment-method status from <code>paylater-user-service</code> and surfaces the (existing) <code>DEFAULT_PAYMENT_OPTION</code> toggle with <code>show:true</code> behind a feature flag.</li>
+<li><code>gpl-bff</code> <code>PATCH /account-management/settings/toggle</code> for <code>DEFAULT_PAYMENT_OPTION</code> is redirected from bizend to <code>paylater-user-service</code>.</li>
+<li><code>gpl-bff</code> exposes a new internal endpoint <code>POST /internal/credit-application/default-payment-method/apply</code> (called by <code>lending-adapter</code> on approval) that forwards the apply request to <code>paylater-user-service</code>.</li>
+<li><code>lending-adapter</code> post-credit flow gains a 4th parallel side-effect: call <code>gpl-bff</code> <code>POST /internal/credit-application/default-payment-method/apply</code> so the cached onboarding opt-in is applied on success. Idempotent.</li>
+<li>Experiment modulo logic (US2) lives in <code>paylater-user-service</code> with a config-driven rollout percentage and a global kill-switch.</li>
+</ul>
+<h1>In Scope</h1>
+<ul>
+<li>New <code>user_default_payment_setting</code> table + PO + mapper + domain model in <code>paylater-user-service</code>.</li>
+<li>Read &amp; write/apply internal APIs on <code>paylater-user-service</code>.</li>
+<li>Experiment modulo + rollout config + kill-switch in <code>paylater-user-service</code>.</li>
+<li>BFF toggle read enrichment + write redirection for <code>DEFAULT_PAYMENT_OPTION</code>.</li>
+<li>BFF internal apply endpoint consumed by <code>lending-adapter</code>.</li>
+<li><code>lending-adapter</code> post-credit side-effect to apply the cached default on approval.</li>
+<li>Feature flag, observability, idempotency for the new apply path.</li>
+</ul>
+<h2>Out of Scope</h2>
+<ul>
+<li><b>Transaction nudge flow (PRD US5–US9):</b> cache-on-confirm, risk-reject handling, PN fallback, backward-compat gating. Separate RFC. Will reuse the read/write API defined here.</li>
+<li><b>GoPay checkout widget propagation:</b> how GPL actually becomes the pre-selected instrument on the GoPay payment widget (US4 "Default label" at checkout) is a GoPay-side integration, tracked under Open Question OQ-2.</li>
+<li><b>Frontend / client work:</b> acquisition review page UI, post-approval screen UI, settings screen UI.</li>
+<li><b>Tokopedia</b> default-payment-method (explicitly out of scope in the PRD).</li>
+<li><b>Data migration</b> of any pre-existing default setting (none exists).</li>
+</ul>
+<h1>Solution</h1>
+<p><b>Recommended approach: route every read/write of the default-payment-method setting through <code>paylater-user-service</code>, and trigger the post-credit apply via the existing <code>lending-adapter → gpl-bff</code> call chain.</b></p>
+<p>Rationale: (1) respects the ownership boundary set by engineering — the GPL user setting lives in the GPL domain, not in GoPay or bizend; (2) reuses the existing <code>gpl-bff → paylater-user-service</code> Reactive Feign client and the existing <code>lending-adapter → gpl-bff</code> callback path, so no new cross-service network topology; (3) the BFF stays a thin orchestrator, matching the <code>ToggleSettingService.fetchToggles</code> aggregation pattern already in place.</p>
+<p><b>What we will NOT do:</b> add a <code>lending-adapter → paylater-user-service</code> direct client (considered, rejected — see Approach #2), call GoPay to store the setting, or backfill via bizend.</p>
+<h1>Implementation Context</h1>
+<table>
+<colgroup><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>Repository</b></p></th><th><p><b>Owns (this RFC)</b></p></th><th><p><b>Path</b></p></th></tr></thead>
+<tbody>
+<tr><td><p><b>paylater-user-service</b></p></td><td><p>Source of truth for the default-payment-method setting; experiment modulo logic; read + apply APIs.</p></td><td><p><code>~/project/paylater-user-service/</code></p></td></tr>
+<tr><td><p><b>gpl-bff</b></p></td><td><p>Client-facing <code>/account-management/settings</code> entry point (read enrichment + write redirection); internal apply endpoint for lending-adapter.</p></td><td><p><code>~/project/gpl-bff/</code></p></td></tr>
+<tr><td><p><b>lending-adapter</b></p></td><td><p>Credit-application-success callback; new post-credit side-effect that calls gpl-bff to apply the cached default.</p></td><td><p><code>~/project/lending-adapter/</code></p></td></tr>
+</tbody>
+</table>
+<h1>System Design</h1>
+<whiteboard type="mermaid">
+sequenceDiagram
+    autonumber
+    participant App as Gojek/GoPay App
+    participant BFF as gpl-bff
+    participant PUS as paylater-user-service
+    participant LA as lending-adapter
+    participant BizEnd as BizEnd / MAB
+
+    rect rgb(235, 248, 255)
+        Note over App,BFF: US1/US2 — Acquisition submit (cache opt-in)
+        App->>BFF: POST /v1/user/submit (x-user-id, optInDefault=true, treatmentGroup)
+        BFF->>PUS: POST /user-service/internal/user/default-payment-method (optInSource=ONBOARDING_REVIEW)
+        PUS-->>BFF: 200 OK (cached, isApplied=false)
+        BFF->>LA: submit credit application (existing)
+    end
+
+    rect rgb(255, 246, 235)
+        Note over BizEnd,PUS: US3 — Post-credit apply (on approval)
+        BizEnd->>LA: POST /lending/internal/credit-application/callback (status=SUCCESS)
+        LA->>LA: updateGofinUser state
+        par
+            LA->>BFF: POST /internal/credit-application/callback (existing)
+        and
+            LA->>BFF: POST /internal/credit-application/default-payment-method/apply
+            BFF->>PUS: POST /user-service/internal/user/default-payment-method/apply
+            PUS->>PUS: is_default_enabled = cached optIn, isApplied=true (idempotent)
+            PUS-->>BFF: 200 OK
+            BFF-->>LA: 200 OK
+        and
+            LA->>LA: Kafka publish CREDIT_APPLICATION_RESULT (existing)
+        end
+    end
+
+    rect rgb(240, 255, 235)
+        Note over App,PUS: US10/US11/US12 — Settings page read &amp; write
+        App->>BFF: GET /account-management/settings/toggles
+        BFF->>PUS: GET /user-service/internal/user/default-payment-method
+        PUS-->>BFF: { isDefaultEnabled, optInSource }
+        BFF-->>App: toggles incl. DEFAULT_PAYMENT_OPTION (show=true behind FF)
+        App->>BFF: PATCH /account-management/settings/toggle (DEFAULT_PAYMENT_OPTION, enabled)
+        BFF->>PUS: POST /user-service/internal/user/default-payment-method (optInSource=SETTINGS_PAGE)
+        PUS-->>BFF: 200 OK
+        BFF-->>App: 200 OK
+    end
+</whiteboard>
+<h1>User Story: US1+US2 — Acquisition opt-in capture &amp; experiment modulo</h1>
+<p><b>As</b> a GPL virgin user on the acquisition review page, <b>I want</b> my "set GPL as default" toggle decision and my treatment group to be persisted at submit, <b>so that</b> it can be applied automatically once my credit application is approved.</p>
+<h2>Acceptance Criteria</h2>
+<table>
+<colgroup><col/><col/><col/><col/><col/></colgroup>
+<tbody>
+<tr><td><p><b>AC</b></p></td><td><p><b>Given</b></p></td><td><p><b>When</b></p></td><td><p><b>Then</b></p></td><td><p><b>Mapping</b></p></td></tr>
+<tr><td><p>1.1 / 2.1</p></td><td><p>Whitelisted virgin user, treatment resolved by <code>gojek_customer_id % 2</code></p></td><td><p>User submits the credit application with opt-in on</p></td><td><p>BFF forwards opt-in + treatment to <code>paylater-user-service</code>; row created with <code>is_default_enabled=true, is_applied=false, opt_in_source=ONBOARDING_REVIEW</code></p></td><td><p>US1 AC1.1; US2</p></td></tr>
+<tr><td><p>1.2</p></td><td><p>User leaves the toggle off</p></td><td><p>Submit</p></td><td><p>Row created with <code>is_default_enabled=false</code> (or absent, defaulting false on read)</p></td><td><p>US1 AC1.1</p></td></tr>
+<tr><td><p>2.2</p></td><td><p>Rollout config = 0%</p></td><td><p>Any submit</p></td><td><p>Feature disabled globally; no row written, BFF returns toggle <code>show=false</code></p></td><td><p>US2 kill-switch</p></td></tr>
+<tr><td><p>2.3</p></td><td><p>Rollout config = 100%</p></td><td><p>Any submit</p></td><td><p>All eligible users assigned a treatment group</p></td><td><p>US2</p></td></tr>
+</tbody>
+</table>
+<h3>Technical Approach</h3>
+<h4>Approach #1 (Preferred) — paylater-user-service owns modulo + storage</h4>
+<p>BFF resolves the gofin id (existing <code>GofinUserService</code>) and calls a new <code>POST /user-service/internal/user/default-payment-method</code> on <code>paylater-user-service</code>. <code>paylater-user-service</code> computes the treatment group from <code>gojek_customer_id</code>, enforces the rollout percentage + kill-switch from config, and upserts the <code>user_default_payment_setting</code> row.</p>
+<h5>Database Modelling</h5>
+<table>
+<colgroup><col/><col/><col/><col/><col/><col/></colgroup>
+<tbody>
+<tr><td><p><b>Table</b></p></td><td><p><b>Field</b></p></td><td><p><b>Type</b></p></td><td><p><b>Nullable</b></p></td><td><p><b>Description</b></p></td><td><p><b>Migration</b></p></td></tr>
+<tr><td><p><code>user_default_payment_setting</code> (new)</p></td><td><p><code>id</code></p></td><td><p>BIGINT UNSIGNED</p></td><td><p>No</p></td><td><p>PK, auto-increment</p></td><td><p>New table</p></td></tr>
+<tr><td><p></p></td><td><p><code>gofin_user_id</code></p></td><td><p>VARCHAR(64)</p></td><td><p>No</p></td><td><p>Unique key — one row per user</p></td><td><p>UNIQUE INDEX</p></td></tr>
+<tr><td><p></p></td><td><p><code>is_default_enabled</code></p></td><td><p>TINYINT(1)</p></td><td><p>No</p></td><td><p>Default 0</p></td><td><p>—</p></td></tr>
+<tr><td><p></p></td><td><p><code>is_applied</code></p></td><td><p>TINYINT(1)</p></td><td><p>No</p></td><td><p>0 until post-credit apply runs</p></td><td><p>—</p></td></tr>
+<tr><td><p></p></td><td><p><code>opt_in_source</code></p></td><td><p>VARCHAR(32)</p></td><td><p>No</p></td><td><p>ONBOARDING_REVIEW / POST_APPROVAL / SETTINGS_PAGE</p></td><td><p>—</p></td></tr>
+<tr><td><p></p></td><td><p><code>treatment_group</code></p></td><td><p>TINYINT</p></td><td><p>Yes</p></td><td><p>1 or 2 (NULL if rollout off)</p></td><td><p>—</p></td></tr>
+<tr><td><p></p></td><td><p><code>created_at</code> / <code>updated_at</code></p></td><td><p>DATETIME</p></td><td><p>No</p></td><td><p>Audit</p></td><td><p>—</p></td></tr>
+</tbody>
+</table>
+<h5>APIs</h5>
+<p><code>paylater-user-service</code> (new, internal):</p>
+<ul>
+<li><code>POST /user-service/internal/user/default-payment-method</code> — upsert opt-in + treatment. Body: <code>{ gofinUserId, isDefaultEnabled, optInSource }</code>. Idempotent on <code>gofin_user_id</code>.</li>
+<li><code>GET /user-service/internal/user/default-payment-method?gofinUserId=</code> — returns <code>{ isDefaultEnabled, isApplied, optInSource, treatmentGroup }</code>.</li>
+<li><code>POST /user-service/internal/user/default-payment-method/apply</code> — sets <code>is_applied=true</code> and finalises <code>is_default_enabled</code> from the cached opt-in. Idempotent; called from the post-credit flow.</li>
+</ul>
+<h5>Events / Queue Changes</h5>
+<p>None. Reuses the existing synchronous BFF→PUS Feign path. (An alternative Kafka fan-out was considered and rejected — <code>paylater-user-service</code> has no Kafka consumer; adding one would breach the ownership boundary.)</p>
+<table>
+<colgroup><col/><col/></colgroup>
+<thead><tr><th><p>Pros</p></th><th><p>Cons</p></th></tr></thead>
+<tbody><tr><td><ul><li>Single owner of setting + experiment logic</li><li>Reuses existing Feign client &amp; BFF aggregation pattern</li><li>No new broker dependency</li></ul></td><td><ul><li>Apply path is synchronous in the post-credit flow (mitigated by idempotency + circuit breaker)</li><li>DDL applied out-of-repo (no in-repo migration tooling)</li></ul></td></tr></tbody>
+</table>
+<readonly-block type="isv"></readonly-block>
+<h4>Approach #2 (Rejected) — lending-adapter calls paylater-user-service directly</h4>
+<p>Add a new <code>lending-adapter → paylater-user-service</code> WebClient and skip the BFF hop for the apply step.</p>
+<table>
+<colgroup><col/><col/></colgroup>
+<thead><tr><th><p>Pros</p></th><th><p>Cons</p></th></tr></thead>
+<tbody><tr><td><ul><li>One fewer network hop on the apply path</li></ul></td><td><ul><li>Creates a new cross-service dependency not present today</li><li>Bypasses the BFF orchestration boundary the team has established</li><li>Diverges apply (LA→PUS) from read/write (BFF→PUS) — two integration paths to maintain</li></ul></td></tr></tbody>
+</table>
+<readonly-block type="isv"></readonly-block>
+<h1>User Story: US3+US4 — Post-approval apply &amp; read-back</h1>
+<p><b>As</b> a just-approved GPL user, <b>I want</b> my cached onboarding opt-in to be applied on approval (or to set it on the post-approval screen), <b>so that</b> GPL is my default payment method immediately.</p>
+<h2>Acceptance Criteria</h2>
+<table>
+<colgroup><col/><col/><col/><col/><col/></colgroup>
+<tbody>
+<tr><td><p><b>AC</b></p></td><td><p><b>Given</b></p></td><td><p><b>When</b></p></td><td><p><b>Then</b></p></td><td><p><b>Mapping</b></p></td></tr>
+<tr><td><p>3.1</p></td><td><p>User opted-in on the review page, credit just approved</p></td><td><p>Post-credit flow runs</p></td><td><p><code>is_applied=true</code>, <code>is_default_enabled=true</code>; subsequent read returns default=true</p></td><td><p>US3</p></td></tr>
+<tr><td><p>3.2</p></td><td><p>User did not opt-in on review page</p></td><td><p>User toggles on the post-approval screen</p></td><td><p>BFF calls write API with <code>optInSource=POST_APPROVAL</code>; <code>is_applied=true</code></p></td><td><p>US3</p></td></tr>
+<tr><td><p>3.3</p></td><p>Duplicate approval callback</p></td><td><p>Post-credit apply runs twice</p></td><td><p>No-op after first success; row unchanged, response still 200</p></td><td><p>Idempotency</p></td></tr>
+<tr><td><p>4.1</p></td><td><p>User has <code>is_default_enabled=true, is_applied=true</code></p></td><p>BFF <code>GET /toggles</code></p></td><td><p><code>DEFAULT_PAYMENT_OPTION.enabled=true</code></p></td><td><p>US4 (read side)</p></td></tr>
+</tbody>
+</table>
+<h3>Technical Approach</h3>
+<p><b>lending-adapter</b> <code>PKYCCreditApplicationService.handleCreditApplicationCallback</code> gains a 4th branch in the existing <code>Mono.zip</code> at <code>PKYCCreditApplicationService.kt:792</code>: call <code>gplBffClient.applyDefaultPaymentMethod(...)</code> → <code>POST /internal/credit-application/default-payment-method/apply</code>. <b>gpl-bff</b> adds that internal endpoint, which forwards to <code>paylater-user-service</code> <code>POST /user-service/internal/user/default-payment-method/apply</code>.</p>
+<p>Idempotency: the apply endpoint sets <code>is_applied=true</code> only if false (conditional UPDATE), so duplicate callbacks are safe. The post-approval-screen write (AC 3.2) reuses the same write API as US1 with <code>optInSource=POST_APPROVAL</code> and forces <code>is_applied=true</code> (the user is already approved).</p>
+<h1>User Story: US10+US11+US12 — Settings page read, write &amp; overwrite</h1>
+<p><b>As</b> an approved GPL user, <b>I want</b> to toggle GPL as my default payment method from the GPL settings screen and see it reflected in real time, <b>so that</b> it is consistent across all GoPay surfaces.</p>
+<h2>Acceptance Criteria</h2>
+<table>
+<colgroup><col/><col/><col/><col/><col/></colgroup>
+<tbody>
+<tr><td><p><b>AC</b></p></td><td><p><b>Given</b></p></td><td><p><b>When</b></p></td><td><p><b>Then</b></p></td><td><p><b>Mapping</b></p></td></tr>
+<tr><td><p>10.1</p></td><td><p>User has never set a default</p></td><td><p>Opens GPL settings</p></td><td><p>Toggle <code>DEFAULT_PAYMENT_OPTION</code> shown (behind FF), <code>enabled=false</code></p></td><td><p>US10</p></td></tr>
+<tr><td><p>10.2</p></td><td><p>User toggles on</p></td><td><p>PATCH /toggle</p></td><td><p>BFF calls PUS write API <code>optInSource=SETTINGS_PAGE</code>; <code>is_default_enabled=true, is_applied=true</code></p></td><td><p>US10/US12</p></td></tr>
+<tr><td><p>11.1</p></td><td><p>Default was set on another entry point</p></td><td><p>Opens settings</p></td><td><p>Toggle reflects the real-time value from PUS (no caching)</p></td><td><p>US11</p></td></tr>
+<tr><td><p>12.1</p></td><td><p>User had another payment method as default</p></td><td><p>Sets GPL as default</p></td><td><p>GPL default overwrites; PUS is the source of truth for the GPL-side flag</p></td><td><p>US12</p></td></tr>
+</tbody>
+</table>
+<h3>Technical Approach</h3>
+<p>Extend <code>ToggleSettingService.fetchToggles</code> (<code>ToggleSettingService.kt:58-89</code>) to additionally call a new <code>gplPaylaterUserServiceClient.getDefaultPaymentMethod(gofinId)</code> and merge it into the toggles map for <code>DEFAULT_PAYMENT_OPTION</code>. Flip <code>toggle-configs.json</code> entry to <code>show:true</code> behind a feature flag evaluated at runtime.</p>
+<p>Reroute <code>ToggleSettingService.toggle</code> (<code>ToggleSettingService.kt:91-112</code>): for <code>feature == DEFAULT_PAYMENT_OPTION</code>, call <code>gplPaylaterUserServiceClient.upsertDefaultPaymentMethod(...)</code> instead of <code>bizEndClient.saveUserSetting(...)</code>. Other features keep their bizend path unchanged.</p>
+<h1>Dependencies</h1>
+<ul>
+<li><b>DDL migration</b> for <code>user_default_payment_setting</code> on the <code>gtfpaylater</code> MySQL datasource — applied out-of-repo (no in-repo migration tooling). Coordinate with the DBA / release manager.</li>
+<li><b>Feature flag</b> (e.g. <code>default-payment-method.enabled</code>, <code>default-payment-method.rollout-pct</code>) on <code>paylater-user-service</code> and a matching BFF flag to gate <code>show:true</code>.</li>
+<li><b>Frontend</b> teams to consume the toggles API and the new apply path on the post-approval screen — not blocking this backend RFC but needed for end-to-end US3/US10.</li>
+<li><b>GoPay checkout integration</b> for US4 "Default label" propagation (Open Question OQ-2) — not blocking the setting/storage work here.</li>
+</ul>
+<h1>Task Breakdown</h1>
+<callout emoji="📌">Implementation tasks. Each carries implicit acceptance criteria from the AC tables above. Tasks are grouped by repo; order reflects the dependency chain (PUS first, then BFF, then LA).</callout>
+<table>
+<colgroup><col/><col/><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>ID</b></p></th><th><p><b>Title</b></p></th><th><p><b>Mandays</b></p></th><th><p><b>Type</b></p></th><th><p><b>Repo / Team</b></p></th></tr></thead>
+<tbody>
+<tr><td><p>BE-1</p></td><td><p>Add <code>user_default_payment_setting</code> DDL on <code>gtfpaylater</code> (PK, unique <code>gofin_user_id</code>, <code>is_default_enabled</code>, <code>is_applied</code>, <code>opt_in_source</code>, <code>treatment_group</code>, timestamps). Coordinate out-of-repo migration.</p></td><td><p>0.5</p></td><td><p>Backend</p></td><td><p>paylater-user-service</p></td></tr>
+<tr><td><p>BE-2</p></td><td><p>Add PO <code>UserDefaultPaymentSettingPO</code>, mapper interface + XML, domain model + assembler under <code>infrastructure</code>/<code>domain</code>. Mirror <code>UserInfoPO</code> / <code>UserInfoMapper.xml</code> conventions.</p></td><td><p>1</p></td><td><p>Backend</p></td><td><p>paylater-user-service</p></td></tr>
+<tr><td><p>BE-3</p></td><td><p>Add experiment modulo + rollout config (<code>default-payment-method.rollout-pct</code>, kill-switch) in <code>application.yml</code>; compute <code>treatment_group = gojekCustomerId % 2</code> when rollout active.</p></td><td><p>0.5</p></td><td><p>Backend</p></td><td><p>paylater-user-service</p></td></tr>
+<tr><td><p>BE-4</p></td><td><p>Implement internal REST: <code>POST /user-service/internal/user/default-payment-method</code> (upsert opt-in), <code>GET .../default-payment-method</code>, <code>POST .../default-payment-method/apply</code> (idempotent) in a new <code>DefaultPaymentMethodInternalController</code>. Add application + domain services.</p></td><td><p>1.5</p></td><td><p>Backend</p></td><td><p>paylater-user-service</p></td></tr>
+<tr><td><p>BE-5</p></td><td><p>Unit + integration tests for PUS endpoints (idempotency on apply, modulo distribution, kill-switch). WireMock Feign test for downstream absence.</p></td><td><p>1</p></td><td><p>Backend / QA</p></td><td><p>paylater-user-service</p></td></tr>
+<tr><td><p>BE-6</p></td><td><p>Extend <code>GplPaylaterUserServiceClient</code> with <code>getDefaultPaymentMethod</code> + <code>upsertDefaultPaymentMethod</code> + <code>applyDefaultPaymentMethod</code>; add error decoder mappings (reuse <code>GplPaylaterUserServiceClientConfiguration</code>).</p></td><td><p>1</p></td><td><p>Backend</p></td><td><p>gpl-bff</p></td></tr>
+<tr><td><p>BE-7</p></td><td><p>Enrich <code>ToggleSettingService.fetchToggles</code> to fetch default-payment-method status and merge into <code>DEFAULT_PAYMENT_OPTION</code>; flip <code>toggle-configs.json</code> <code>show</code> behind a runtime FF.</p></td><td><p>1</p></td><td><p>Backend</p></td><td><p>gpl-bff</p></td></tr>
+<tr><td><p>BE-8</p></td><td><p>Reroute <code>ToggleSettingService.toggle</code> for <code>DEFAULT_PAYMENT_OPTION</code> from bizend to PUS (<code>optInSource=SETTINGS_PAGE</code>, <code>is_applied=true</code>); leave other features on bizend.</p></td><td><p>0.5</p></td><td><p>Backend</p></td><td><p>gpl-bff</p></td></tr>
+<tr><td><p>BE-9</p></td><td><p>Add BFF internal endpoint <code>POST /internal/credit-application/default-payment-method/apply</code> forwarding to PUS apply; wire into <code>InternalController</code>.</p></td><td><p>0.5</p></td><td><p>Backend</p></td><td><p>gpl-bff</p></td></tr>
+<tr><td><p>BE-10</p></td><td><p>Update <code>CreditApplicationServiceImpl</code> submit path to forward <code>optInDefault</code> + treatment to PUS (US1 cache step).</p></td><td><p>0.5</p></td><td><p>Backend</p></td><td><p>gpl-bff</p></td></tr>
+<tr><td><p>BE-11</p></td><td><p>Extend <code>GopayLaterBffClient</code> with <code>applyDefaultPaymentMethod(...)</code> (circuit-breaker protected) in <code>lending-adapter</code>.</p></td><td><p>0.5</p></td><td><p>Backend</p></td><td><p>lending-adapter</p></td></tr>
+<tr><td><p>BE-12</p></td><td><p>Add 4th branch in <code>PKYCCreditApplicationService.handleCreditApplicationCallback</code> <code>Mono.zip</code> to call <code>applyDefaultPaymentMethod</code> only when status == SUCCESS. Keep existing 3 branches intact.</p></td><td><p>1</p></td><td><p>Backend</p></td><td><p>lending-adapter</p></td></tr>
+<tr><td><p>BE-13</p></td><td><p>Add idempotency guard for the credit-application callback in <code>lending-adapter</code> (consult <code>CallbackData.hasReceived</code> before re-running side-effects) — reduces duplicate-apply risk.</p></td><td><p>1</p></td><td><p>Backend</p></td><td><p>lending-adapter</p></td></tr>
+<tr><td><p>BE-14</p></td><td><p>Observability: New Relic/Sentry timings + custom metrics for PUS read/write/apply, BFF toggle enrichment, LA apply branch success/failure. Add dashboards + alerts for apply failure rate.</p></td><td><p>1</p></td><td><p>Backend</p></td><td><p>all three</p></td></tr>
+<tr><td><p>BE-15</p></td><td><p>Contract tests across BFF↔PUS and LA↔BFF (WireMock / Reactor-test); add openspec entries in <code>lending-adapter/openspec</code> for the new apply call.</p></td><td><p>1</p></td><td><p>QA</p></td><td><p>all three</p></td></tr>
+<tr><td><p>BE-16</p></td><td><p>Feature-flag config + rollout plan execution (0% → 50% → 100%) and kill-switch verification in staging.</p></td><td><p>0.5</p></td><td><p>Release</p></td><td><p>all three</p></td></tr>
+</tbody>
+</table>
+<h1>Cross-Cutting Checklist</h1>
+<table>
+<colgroup><col/><col/><col/><col/></colgroup>
+<tbody>
+<tr><td><p><b>#</b></p></td><td><p><b>Concern</b></p></td><td><p><b>Status</b></p></td><td><p><b>Notes</b></p></td></tr>
+<tr><td><p>1</p></td><td><p><b>NFRs</b> — PUS read &lt;200ms p99; apply must not block post-credit flow beyond existing circuit-breaker budget</p></td><td><p>TODO target</p></td><td><p>Apply runs in parallel <code>Mono.zip</code> with existing branches</p></td></tr>
+<tr><td><p>2</p></td><td><p><b>Security</b> — internal endpoints reachable only inside the cluster; BFF validates <code>x-user-id</code> from gateway</p></td><td><p>Planned</p></td><td><p>Mirror existing internal-controller auth</p></td></tr>
+<tr><td><p>3</p></td><td><p><b>Data Privacy / PII</b> — <code>gofin_user_id</code> is an internal identifier; no new PII column. No AES encryption needed (unlike <code>user_info</code> PII columns)</p></td><td><p>Low risk</p></td><td><p>—</p></td></tr>
+<tr><td><p>4</p></td><td><p><b>Compliance / Regulatory</b> — default-payment-method is a UX preference, not a credit decision; sign-offs in PRD (Legal, Compliance, DPPO)</p></td><td><p>Tracked in PRD</p></td><td><p>No new regulatory exposure</p></td></tr>
+<tr><td><p>5</p></td><td><p><b>Risk &amp; Fraud</b> — setting default does not bypass risk checks; risk reject still blocks transactions (out-of-scope US9 confirms)</p></td><td><p>None</p></td><td><p>Setting is independent of risk evaluation</p></td></tr>
+<tr><td><p>6</p></td><td><p><b>CS Escalation</b> — new error codes from PUS apply path surfaced through BFF <code>BffError</code> enum; CS playbook update</p></td><td><p>TODO</p></td><td><p>Add <code>DEFAULT_PAYMENT_METHOD_APPLY_FAILED</code></p></td></tr>
+<tr><td><p>7</p></td><td><p><b>Backward Compatibility</b> — old clients not sending <code>optInDefault</code> default to false; <code>toggle-configs.json</code> stays <code>show:false</code> until FF on</p></td><td><p>Planned</p></td><td><p>US8 equivalent for the settings surface</p></td></tr>
+<tr><td><p>8</p></td><td><p><b>Feature Flag / Kill Switch</b> — <code>default-payment-method.enabled</code> (PUS + BFF) + <code>rollout-pct</code></p></td><td><p>Planned</p></td><td><p>Kill switch returns <code>show:false</code> and skips apply branch</p></td></tr>
+<tr><td><p>9</p></td><td><p><b>Observability</b> — metrics for opt-in capture rate, apply success/failure, treatment split, read latency</p></td><td><p>Planned</p></td><td><p>Task BE-14</p></td></tr>
+<tr><td><p>10</p></td><td><p><b>Rate Limiting</b> — reuse BFF <code>ApiRateLimiter</code>; PUS internal endpoints not exposed externally</p></td><td><p>Existing</p></td><td><p>—</p></td></tr>
+<tr><td><p>11</p></td><td><p><b>Third-party / External</b> — none; GoPay checkout propagation is separate (OQ-2)</p></td><td><p>N/A here</p></td><td><p>—</p></td></tr>
+<tr><td><p>12</p></td><td><p><b>Testing Strategy</b> — unit (PUS modulo, idempotency), integration (BFF↔PUS, LA↔BFF WireMock), E2E (acquisition submit → approval → settings read)</p></td><td><p>Planned</p></td><td><p>Tasks BE-5, BE-15</p></td></tr>
+</tbody>
+</table>
+<h1>Rollout Plan</h1>
+<ol>
+<li><b>Phase 0 (staging):</b> Deploy with <code>default-payment-method.enabled=false</code>. Verify DDL, endpoints, and contract tests. No user impact.</li>
+<li><b>Phase 1 (prod, 0%):</b> Enable flag for internal/test accounts only. Verify acquisition opt-in write, post-credit apply idempotency, and settings read.</li>
+<li><b>Phase 2 (prod, 50%):</b> Rollout-pct = 50 → treatment groups assigned; <code>toggle-configs.json</code> <code>show:true</code> for 50% of clients. Monitor apply failure rate, PUS read latency, and the experiment dashboard.</li>
+<li><b>Phase 3 (prod, 100%):</b> Rollout-pct = 100 after experiment concludes. Remove kill-switch only after sign-off.</li>
+</ol>
+<p>Monitoring gate per phase: apply failure rate &lt; 0.1%, PUS read p99 &lt; 200ms, no increase in post-credit callback latency beyond existing budget.</p>
+<h1>Rollback Plan</h1>
+<ol>
+<li><b>Immediate:</b> set <code>default-payment-method.enabled=false</code> (kill-switch). BFF returns <code>show:false</code>; LA apply branch short-circuits; PUS endpoints return 200 but skip writes.</li>
+<li><b>Data:</b> the <code>user_default_payment_setting</code> table is additive; no destructive rollback needed. Rows can be ignored (read returns <code>is_default_enabled=false</code> when flag is off).</li>
+<li><b>Client impact:</b> toggles disappear; users who set default see no checkout change (GoPay propagation is independent).</li>
+<li><b>Notify:</b> GPL Engagement tech lead, PM (Andreas/Ignes), on-call.</li>
+</ol>
+<h1>Conclusion</h1>
+<p>TODO: capture the RFC review meeting outcome.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://gotocompany.sg.larksuite.com/docx/KLxndxHSdoV5NbxbrntlWoMogGe">Mini PRD: Set GoPay Later as Default Payment Method across flows (Lark)</a></li>
+<li>Local PRD mirror: <code>output/Default Payment Method/prd.md</code></li>
+<li>Past PRD: <a href="https://docs.google.com/document/d/11bSgaGCsSEVAgvyZy4Oj-zpfSgRpkkNzv33tXppeX_o/edit?tab=t.0">Set GPL as default payment method in GPL onboarding</a></li>
+<li>Repo: <code>~/project/paylater-user-service/</code> · <code>~/project/gpl-bff/</code> · <code>~/project/lending-adapter/</code></li>
+</ul>
+<h2>Open questions?</h2>
+<checkbox done="false"><b>OQ-1 (US11 deviation):</b> PRD US11 says "BFF fetches default method setting from GoPay real-time". Engineering context mandates the setting be owned by <code>paylater-user-service</code> (no GoPay API call). <ul><li>Resolution: confirmed in this RFC — source of truth is <code>paylater-user-service</code>. PM to acknowledge the deviation. GoPay remains the owner of the actual checkout-widget "default" selection (see OQ-2).</li></ul></checkbox>
+<checkbox done="false"><b>OQ-2 (Checkout propagation):</b> how does the GPL default flag in <code>paylater-user-service</code> reach the GoPay payment widget so GPL is pre-selected and labelled "Default" (US4)? <ul><li>Resolution: out of scope for this RFC. Needs a separate integration with the GoPay payment-settings team — either GoPay polls/reads PUS, or PUS pushes to GoPay on apply.</li></ul></checkbox>
+<checkbox done="false"><b>OQ-3 (Post-approval screen write):</b> when a user toggles on the post-approval screen (AC 3.2), is the write synchronous-blocking the screen, or fire-and-forget? <ul><li>Resolution: TODO — recommend fire-and-forget with a retry, since the user may dismiss the screen.</li></ul></checkbox>
+<checkbox done="false"><b>OQ-4 (Experiment metric):</b> minimum sample size and experiment duration for Treatment 1 vs 2 (US2). <ul><li>Resolution: TODO — confirm with Product Analyst (Lisa/Azka).</li></ul></checkbox>
+<checkbox done="false"><b>OQ-5 (Idempotency in lending-adapter):</b> the credit-application callback currently has no dedup guard. Should we add one as part of BE-13, or keep relying on PUS apply idempotency only? <ul><li>Resolution: TODO — recommend both layers (defense in depth).</li></ul></checkbox>
+<h2>RFC review meeting notes</h2>
+<table>
+<colgroup><col/><col/></colgroup>
+<thead><tr><th><p>Date</p></th><th><p>Notes</p></th></tr></thead>
+<tbody><tr><td><p>TODO</p></td><td><p><b>Attendees:</b> TODO</p><p><b>Meeting notes</b></p><ul><li>TODO</li></ul></td></tr></tbody>
+</table>

@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { parseLarkUrl } from "./lark-url.js";
-import { ensurePrdMarkdown, markdownToLarkHtml, markdownToLarkMarkdown, markdownToLarkXml, renderFromTemplate, titleFromMarkdown } from "./markdown.js";
+import { ensurePrdMarkdown, markdownToLarkMarkdown, markdownToLarkXml, renderFromTemplate, titleFromMarkdown, wrapXmlInHtml } from "./markdown.js";
 import { runConfiguredCommand } from "./shell.js";
 
 export async function pullPrd(options) {
@@ -35,10 +35,22 @@ export async function generateArtifacts(options) {
   const context = await loadContext(options.contextFile);
   const scope = options.scope ?? "TODO: Backend, Frontend, QA, Data / Analytics, Release, or another explicit area.";
 
-  const rfcTemplate = await readFile(new URL("../templates/rfc.md", import.meta.url), "utf8");
+  const rfcXmlTemplate = await readFile(new URL("../templates/rfc.lark.xml", import.meta.url), "utf8");
+  const rfcMdTemplate = await readFile(new URL("../templates/rfc.md", import.meta.url), "utf8");
   const tasksTemplate = await readFile(new URL("../templates/tasks.md", import.meta.url), "utf8");
 
-  const rfcMarkdown = renderFromTemplate(rfcTemplate, {
+  const prdXml = markdownToLarkXml(prdMarkdown);
+  const contextXml = markdownToLarkXml(context);
+
+  const rfcXml = renderFromTemplate(rfcXmlTemplate, {
+    title,
+    source: source.label,
+    prd: prdXml,
+    scope,
+    context: contextXml
+  });
+
+  const rfcMarkdown = renderFromTemplate(rfcMdTemplate, {
     title,
     source: source.label,
     prd: prdMarkdown,
@@ -60,35 +72,28 @@ export async function generateArtifacts(options) {
   const larkXmlPath = join(options.outDir, "rfc.lark.xml");
   const larkHtmlPath = join(options.outDir, "rfc.lark.html");
   const larkMd = markdownToLarkMarkdown(rfcMarkdown);
-  const larkXml = markdownToLarkXml(rfcMarkdown);
-  const larkHtml = markdownToLarkHtml(rfcMarkdown);
+  const larkHtml = wrapXmlInHtml(rfcXml);
 
   await writeFile(prdPath, prdMarkdown + "\n", "utf8");
   await writeFile(rfcPath, rfcMarkdown + "\n", "utf8");
   await writeFile(tasksPath, tasksMarkdown + "\n", "utf8");
   await writeFile(larkMdPath, larkMd + "\n", "utf8");
-  await writeFile(larkXmlPath, larkXml + "\n", "utf8");
+  await writeFile(larkXmlPath, rfcXml + "\n", "utf8");
   await writeFile(larkHtmlPath, larkHtml + "\n", "utf8");
 
   return { prdPath, rfcPath, tasksPath, larkMdPath, larkXmlPath, larkHtmlPath, source };
 }
 
 export async function generateLarkHtml(options) {
-  if (!options.rfcFile) throw new Error("Provide --rfc-file for html.");
+  if (!options.xmlFile) throw new Error("Provide --xml-file for html.");
 
-  const rfcMarkdown = await readFile(options.rfcFile, "utf8");
-  const htmlPath = options.outFile ?? options.rfcFile.replace(/\.md$/i, ".lark.html");
-  const larkMdPath = htmlPath.replace(/\.lark\.html$/i, ".lark.md");
-  const larkXmlPath = htmlPath.replace(/\.lark\.html$/i, ".lark.xml");
-  const larkMd = markdownToLarkMarkdown(rfcMarkdown);
-  const larkXml = markdownToLarkXml(rfcMarkdown);
-  const larkHtml = markdownToLarkHtml(rfcMarkdown);
+  const xml = await readFile(options.xmlFile, "utf8");
+  const htmlPath = options.outFile ?? options.xmlFile.replace(/\.lark\.xml$/i, ".lark.html");
+  const html = wrapXmlInHtml(xml);
 
-  await writeFile(larkMdPath, larkMd + "\n", "utf8");
-  await writeFile(larkXmlPath, larkXml + "\n", "utf8");
-  await writeFile(htmlPath, larkHtml + "\n", "utf8");
+  await writeFile(htmlPath, html + "\n", "utf8");
 
-  return { htmlPath, larkMdPath, larkXmlPath };
+  return { htmlPath };
 }
 
 export async function pushRfc(options) {

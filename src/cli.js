@@ -61,13 +61,11 @@ async function main() {
 
   if (command === "html") {
     const result = await generateLarkHtml({
-      rfcFile: valueOf("--rfc-file"),
+      xmlFile: valueOf("--xml-file"),
       outFile: valueOf("--out-file")
     });
 
     console.log("Generated Lark HTML:");
-    console.log(`- Lark Markdown: ${result.larkMdPath}`);
-    console.log(`- Lark XML: ${result.larkXmlPath}`);
     console.log(`- Lark HTML: ${result.htmlPath}`);
     return;
   }
@@ -101,15 +99,15 @@ Commands:
   generate --from-file <path> --out-dir <dir>
   generate --url <lark-url> --out-dir <dir>
     [--scope <Backend|Frontend|QA|Data|Release|...>] [--context <context.md>]
-  html --rfc-file <path> [--out-file <path>]
+  html --xml-file <path> [--out-file <path>]
   push --html-file <path> [--rfc-file <path>] [--state-file <path>] --title <title> [--parent <lark-folder-or-doc>]
   parse-url --url <lark-url>
 
 Examples:
   PRD_TO_RFC_FETCH_CMD='lark-cli docs +fetch --doc "{{url}}" --doc-format markdown --jq ".data.document.content"' node ./src/cli.js pull --url "https://example.larksuite.com/docx/xxxx" --out-dir ./output/my-prd
   node ./src/cli.js generate --from-file ./examples/sample-prd.md --out-dir ./output/demo --scope "Backend, Frontend" --context ./context.md
-  node ./src/cli.js html --rfc-file ./output/demo/rfc.md --out-file ./output/demo/rfc.lark.html
-  PRD_TO_RFC_PUSH_CMD='lark-cli docs +create --doc-format markdown --title "{{title}}" --content @{{rfc_file}}' node ./src/cli.js push --html-file ./output/demo/rfc.lark.html --rfc-file ./output/demo/rfc.md --title "RFC: Demo"
+  node ./src/cli.js html --xml-file ./output/demo/rfc.lark.xml --out-file ./output/demo/rfc.lark.html
+  PRD_TO_RFC_PUSH_CMD='lark-cli docs +create --doc-format xml --title "{{title}}" --content @{{rfc_file}}' node ./src/cli.js push --html-file ./output/demo/rfc.lark.html --rfc-file ./output/demo/rfc.lark.xml --title "RFC: Demo"
   node ./src/cli.js parse-url --url "https://example.larksuite.com/docx/xxxx"
 `);
 }

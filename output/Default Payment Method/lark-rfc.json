@@ -1,0 +1,28 @@
+{
+  "title": "RFC: Default Payment Method",
+  "documentUrl": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb",
+  "documentToken": "H7mudUYxloq8k3xjxiultUkCgTb",
+  "lastPushedAt": "2026-06-29T17:40:39.154Z",
+  "lastResult": {
+    "ok": true,
+    "identity": "user",
+    "data": {
+      "document": {
+        "new_blocks": [
+          {
+            "block_id": "doxlgvMT0i1ckMl9MBztQyevyj4",
+            "block_token": "SsGtwS6rDhtP3SbLRSIlKMEagvc",
+            "block_type": "whiteboard"
+          }
+        ],
+        "revision_id": 38,
+        "url": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb"
+      },
+      "result": "success",
+      "warnings": []
+    }
+  },
+  "rfcFile": "output/Default Payment Method/rfc.lark.xml",
+  "htmlFile": "output/Default Payment Method/rfc.lark.html",
+  "stateFile": "output/Default Payment Method/lark-rfc.json"
+}

@@ -34,12 +34,14 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
    - Convert tables/checklists into Markdown.
    - Keep links as Markdown links.
 
-4. Create `rfc.md`.
-   - Use `templates/rfc.md`.
+4. Create `rfc.md` (portable mirror) and `rfc.lark.xml` (primary).
+   - Use `templates/rfc.lark.xml` (Lark XML primary, retains `<callout>`, `<checkbox>`, `<whiteboard type="mermaid">`, tables) and `templates/rfc.md` (portable Markdown mirror).
+   - `rfc.lark.xml` is the primary, editable RFC artifact. After generation, edit this file.
+   - `rfc.md` is a portable Markdown mirror for GitHub rendering; generated once, not the source of truth after edits.
    - Convert product requirements into engineering implications.
    - Use the requested scope to focus the RFC on backend, frontend, QA, data/analytics, release, or any other named implementation area.
-   - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC and fill the Repository Analysis table with file-backed conclusions.
-   - Include a Mermaid diagram in the System Design section using a standard ` ```mermaid ` fenced code block. The harness auto-converts this to a Lark `<whiteboard type="mermaid">` block in `rfc.lark.xml` for native rendering. Prefer a flowchart or sequence diagram that reflects the actual repository boundaries and data/control flow.
+   - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC and fill the relevant sections with file-backed conclusions.
+   - The System Design section includes a `<whiteboard type="mermaid">` block (XML) / ` ```mermaid ` fenced code block (Markdown). Prefer a flowchart or sequence diagram that reflects the actual repository boundaries and data/control flow.
    - Include non-goals, API changes, data model changes, edge cases, observability, rollout, risks, and open questions.
    - Include the implementation task checklist at the bottom of the RFC so reviewers can see the work breakdown without opening `tasks.md`.
 
@@ -63,13 +65,13 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
 User gives Lark PRD URL
   -> agent runs prd_to_rfc <url> <session-name>
   -> agent reviews prd.md
-  -> agent improves rfc.md/tasks.md if needed
-  -> agent runs regenerate_rfc <session-name>
+  -> agent improves rfc.lark.xml (primary) and tasks.md if needed
+  -> agent runs regenerate_rfc <session-name> to refresh rfc.lark.html
   -> agent reruns push if needed
   -> agent reports Lark RFC URL from push output
 ```
 
-After editing `rfc.md`, regenerate the Lark-ready XML, Markdown, and HTML preview:
+After editing `rfc.lark.xml` (the primary artifact), regenerate the local HTML preview:
 
 ```bash
 regenerate_rfc "<session-name>"

@@ -69,13 +69,13 @@ If Lark CLI or `PRD_TO_RFC_FETCH_CMD` is not configured, URL-based `run.sh` must
 ## Implementation Notes
 
 - `run.sh` is the main orchestration wrapper.
-- `regenerate.sh` refreshes `rfc.lark.md`, `rfc.lark.xml`, and `rfc.lark.html` after manual edits to `rfc.md`.
+- `regenerate.sh` refreshes `rfc.lark.html` after manual edits to `rfc.lark.xml` (XML-primary).
 - `src/cli.js` exposes lower-level commands.
 - `src/path.js` maps simple session names to `./output/<session>`.
 - `src/markdown.js` owns Markdown to Lark-friendly conversion:
-  - `rfc.md` is portable Markdown (standard ` ```mermaid ` fences, safe to copy-paste or render on GitHub).
-  - `rfc.lark.md` is Lark-ready Markdown for reference.
-  - `rfc.lark.xml` is the reliable Lark import artifact (tables, code blocks, and `<whiteboard type="mermaid">` blocks).
-  - `rfc.lark.html` is a local browser preview only; do not rely on manual browser copy/paste for Lark-specific blocks.
+  - `rfc.md` is a portable Markdown mirror for GitHub rendering; generated once at `generate` time and not the source of truth after edits.
+  - `rfc.lark.md` is Lark-ready Markdown for reference; generated once at `generate` time.
+  - `rfc.lark.xml` is the primary, editable RFC artifact and the reliable Lark import format (tables, code blocks, `<callout>`, `<checkbox>`, and `<whiteboard type="mermaid">` blocks). Edit this file after generation.
+  - `rfc.lark.html` is a local browser preview only; regenerated from `rfc.lark.xml` by `regenerate_rfc`. Do not rely on manual browser copy/paste for Lark-specific blocks.
   - Push uses `rfc.lark.xml` (not `rfc.md` or browser-copied HTML) so tables and mermaid render natively in Lark.
 - `.agents/skills/prd-to-rfc/SKILL.md` is the repo-local skill OpenCode should read.

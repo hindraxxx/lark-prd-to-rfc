@@ -40,6 +40,20 @@ export function renderFromTemplate(template, values) {
 }
 
 const MERMAID_FENCE_RE = /```mermaid\s*\n([\s\S]*?)```/g;
+const MARKDOWN_IMAGE_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
+const RAW_BLOCK_TAGS = new Set([
+  "table", "grid", "callout", "checkbox", "readonly-block", "ul", "ol", "div", "img"
+]);
+
+function matchRawBlockStart(line) {
+  const match = line.match(/^\s*<(\w+)/);
+  if (!match) return null;
+  return RAW_BLOCK_TAGS.has(match[1]) ? match[1] : null;
+}
+
+function convertMarkdownImagesInXml(xml) {
+  return xml.replace(MARKDOWN_IMAGE_RE, '<img src="$2" alt="$1"/>');
+}
 
 export function markdownToLarkMarkdown(markdown) {
   return markdown.replace(
@@ -48,9 +62,7 @@ export function markdownToLarkMarkdown(markdown) {
   );
 }
 
-export function markdownToLarkHtml(markdown) {
-  const body = markdownToLarkXml(markdown);
-
+export function wrapXmlInHtml(xml) {
   return [
     "<!doctype html>",
     '<html lang="en">',
@@ -59,10 +71,14 @@ export function markdownToLarkHtml(markdown) {
     "  <title>RFC</title>",
     "</head>",
     "<body>",
-    body,
+    xml,
     "</body>",
     "</html>"
   ].join("\n");
+}
+
+export function markdownToLarkHtml(markdown) {
+  return wrapXmlInHtml(markdownToLarkXml(markdown));
 }
 
 export function markdownToLarkXml(markdown) {
@@ -76,6 +92,9 @@ export function markdownToLarkXml(markdown) {
   let inWhiteboard = false;
   let whiteboardBuffer = [];
   let tableBuffer = [];
+  let inRawBlock = false;
+  let rawBlockTag = "";
+  let rawBlockBuffer = [];
 
   const closeList = () => {
     if (inList) {
@@ -145,6 +164,35 @@ export function markdownToLarkXml(markdown) {
       continue;
     }
 
+    if (inRawBlock) {
+      rawBlockBuffer.push(line);
+      if (line.includes(`</${rawBlockTag}>`)) {
+        closeList();
+        closeTable();
+        html.push(convertMarkdownImagesInXml(rawBlockBuffer.join("\n")));
+        rawBlockBuffer = [];
+        inRawBlock = false;
+        rawBlockTag = "";
+      }
+      continue;
+    }
+
+    const rawTag = matchRawBlockStart(line);
+    if (rawTag) {
+      if (line.includes(`</${rawTag}>`) || line.trim().endsWith("/>")) {
+        closeList();
+        closeTable();
+        html.push(convertMarkdownImagesInXml(line));
+      } else {
+        closeList();
+        closeTable();
+        inRawBlock = true;
+        rawBlockTag = rawTag;
+        rawBlockBuffer = [line];
+      }
+      continue;
+    }
+
     if (!line.trim()) {
       closeList();
       closeTable();
@@ -188,6 +236,13 @@ export function markdownToLarkXml(markdown) {
       continue;
     }
 
+    const standaloneImage = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (standaloneImage) {
+      closeList();
+      html.push(`<img src="${standaloneImage[2]}" alt="${escapeHtml(standaloneImage[1])}"/>`);
+      continue;
+    }
+
     closeList();
     html.push(`<p>${inlineMarkdownToHtml(line)}</p>`);
   }
@@ -206,6 +261,7 @@ function addSourceHeader(markdown, sourceLabel) {
 
 function inlineMarkdownToHtml(text) {
   return escapeHtml(text)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1"/>')
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/`(.+?)`/g, "<code>$1</code>")
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');

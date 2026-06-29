@@ -18,9 +18,9 @@ You
   -> provide repositories to inspect when the RFC depends on existing code
   -> agent invokes CLI pull
   -> CLI gets PRD from Lark
-  -> agent/CLI creates prd.md, rfc.md, tasks.md
-  -> agent improves rfc.md with repository-backed analysis, Mermaid design, and bottom-of-RFC tasks
-  -> CLI converts rfc.md into rfc.lark.xml + rfc.lark.html
+  -> agent/CLI creates prd.md, rfc.md, rfc.lark.xml (primary), tasks.md
+  -> agent improves rfc.lark.xml with repository-backed analysis, Mermaid design, and tasks
+  -> CLI wraps rfc.lark.xml into rfc.lark.html for local preview
   -> CLI pushes XML into a new Lark RFC doc
 ```
 
@@ -83,7 +83,7 @@ prd_to_rfc <lark-prd-url> [session-name] [--scope <area>] [--context <context.md
 
 The session name can be any product/session name. `demo` maps to `output/demo/`. If you omit it, the script uses the Lark doc token.
 
-When the RFC requires codebase context, give the agent the repository list before final review. The base RFC includes a Repository Analysis table, a Mermaid diagram placeholder in System Design, and an Implementation Tasks checklist at the bottom of `rfc.md`; the agent should replace those TODOs with conclusions from the inspected repositories.
+When the RFC requires codebase context, give the agent the repository list before final review. The base RFC template (sourced from the canonical Lark RFC template) includes a metadata table, Glossary, Background, Current State, Desired State, Solution, User Story with Acceptance Criteria, multi-approach Technical Approach, Cross-Cutting Checklist, Rollout/Rollback Plans, and review-meeting notes. The System Design section contains a `<whiteboard type="mermaid">` block. `rfc.lark.xml` is the primary editable artifact; `rfc.md` is a portable Markdown mirror for GitHub reading.
 
 Use `--scope` to tell the RFC which implementation area to emphasize:
 
@@ -154,13 +154,13 @@ From an existing local PRD file:
 prd_to_rfc --from-file ./examples/sample-prd.md demo
 ```
 
-After manually editing `rfc.md`, regenerate the Lark XML and local HTML preview:
+After manually editing `rfc.lark.xml` (the primary artifact), regenerate the local HTML preview:
 
 ```bash
 regenerate_rfc demo
 ```
 
-This regenerates `rfc.lark.xml` (the reliable Lark import artifact), `rfc.lark.md` (Markdown reference), and `rfc.lark.html` (local browser preview). Do not use browser copy/paste as the transport for Lark-specific blocks; push/import `rfc.lark.xml` with `lark-cli`.
+This regenerates `rfc.lark.html` (local browser preview) from `rfc.lark.xml`. `rfc.md` and `rfc.lark.md` are portable references generated once at `generate` time; edit `rfc.lark.xml` for RFC content changes. Do not use browser copy/paste as the transport for Lark-specific blocks; push/import `rfc.lark.xml` with `lark-cli`.
 
 Then push the refreshed RFC to Lark:
 
@@ -190,6 +190,12 @@ node ./src/cli.js generate \
   --out-dir ./output/my-prd \
   --scope "Backend, Frontend" \
   --context ./rfc-context.md
+```
+
+Regenerate the local HTML preview from the primary XML:
+
+```bash
+node ./src/cli.js html --xml-file ./output/my-prd/rfc.lark.xml --out-file ./output/my-prd/rfc.lark.html
 ```
 
 Push the generated RFC XML back to Lark:
