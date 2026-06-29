@@ -1,6 +1,11 @@
 # Task Breakdown: {{title}}
 
 Source PRD: {{source}}
+Requested Change Scope: {{scope}}
+
+## Implementation Context
+
+{{context}}
 
 ## Backend
 

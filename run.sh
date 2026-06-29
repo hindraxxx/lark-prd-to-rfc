@@ -4,8 +4,8 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  prd_to_rfc <lark-prd-url> [session-name]
-  prd_to_rfc --from-file <prd.md> [session-name]
+  prd_to_rfc <lark-prd-url> [session-name] [--scope <area>] [--context <context.md>]
+  prd_to_rfc --from-file <prd.md> [session-name] [--scope <area>] [--context <context.md>]
   prd_to_rfc --html <out-dir-or-rfc.md>
   prd_to_rfc --push <out-dir-or-html-file>
 
@@ -17,7 +17,7 @@ Optional env:
   RFC_TITLE             title to use when pushing RFC to Lark
 
 Examples:
-  prd_to_rfc "https://example.larksuite.com/docx/abc123" demo
+  prd_to_rfc "https://example.larksuite.com/docx/abc123" docs_name --scope "Backend, Frontend" --context ./rfc-context.md
 
   PRD_TO_RFC_SKIP_PUSH=1 prd_to_rfc "https://example.larksuite.com/docx/abc123" demo
 
@@ -42,6 +42,8 @@ source ./lib/lark-cli.sh
 
 input="$1"
 session_name="${2:-}"
+scope=""
+context_file=""
 
 if [[ "$input" == "--html" ]]; then
   if [[ $# -lt 2 ]]; then
@@ -95,13 +97,64 @@ if [[ "$input" == "--from-file" ]]; then
   fi
 
   prd_file="$2"
-  from_file_session="${3:-manual}"
+  if [[ "${3:-}" == --* || $# -lt 3 ]]; then
+    from_file_session="manual"
+    parse_start=3
+  else
+    from_file_session="$3"
+    parse_start=4
+  fi
+  while [[ $parse_start -le $# ]]; do
+    arg="${!parse_start}"
+    case "$arg" in
+      --scope)
+        parse_start=$((parse_start + 1))
+        scope="${!parse_start:-}"
+        ;;
+      --context)
+        parse_start=$((parse_start + 1))
+        context_file="${!parse_start:-}"
+        ;;
+      *)
+        echo "Unknown option: $arg" >&2
+        exit 1
+        ;;
+    esac
+    parse_start=$((parse_start + 1))
+  done
   out_dir="$(node -e 'import("./src/path.js").then(({outputDirForSession}) => console.log(outputDirForSession(process.argv[1])))' "$from_file_session")"
 
   mkdir -p "$out_dir"
-  node ./src/cli.js generate --from-file "$prd_file" --out-dir "$out_dir"
+  generate_args=(./src/cli.js generate --from-file "$prd_file" --out-dir "$out_dir")
+  [[ -n "$scope" ]] && generate_args+=(--scope "$scope")
+  [[ -n "$context_file" ]] && generate_args+=(--context "$context_file")
+  node "${generate_args[@]}"
 else
   url="$input"
+  if [[ "${session_name:-}" == --* ]]; then
+    session_name=""
+    parse_start=2
+  else
+    parse_start=3
+  fi
+  while [[ $parse_start -le $# ]]; do
+    arg="${!parse_start}"
+    case "$arg" in
+      --scope)
+        parse_start=$((parse_start + 1))
+        scope="${!parse_start:-}"
+        ;;
+      --context)
+        parse_start=$((parse_start + 1))
+        context_file="${!parse_start:-}"
+        ;;
+      *)
+        echo "Unknown option: $arg" >&2
+        exit 1
+        ;;
+    esac
+    parse_start=$((parse_start + 1))
+  done
   if ! lark_bin="$(resolve_lark_cli)"; then
     echo "Missing required Lark CLI. Expected lark-cli or lark on PATH." >&2
     echo "Install/configure @larksuite/cli, or set LARK_CLI_BIN to the executable path." >&2
@@ -118,7 +171,10 @@ else
   mkdir -p "$out_dir"
 
   node ./src/cli.js pull --url "$url" --out-dir "$out_dir"
-  node ./src/cli.js generate --from-file "$out_dir/prd.md" --out-dir "$out_dir"
+  generate_args=(./src/cli.js generate --from-file "$out_dir/prd.md" --out-dir "$out_dir")
+  [[ -n "$scope" ]] && generate_args+=(--scope "$scope")
+  [[ -n "$context_file" ]] && generate_args+=(--context "$context_file")
+  node "${generate_args[@]}"
 fi
 
 if [[ "${PRD_TO_RFC_SKIP_PUSH:-}" == "1" ]]; then

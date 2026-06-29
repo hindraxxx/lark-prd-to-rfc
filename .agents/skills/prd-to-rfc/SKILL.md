@@ -16,6 +16,8 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
 
 1. Pull the source.
    - If the input is a Lark URL, invoke `prd_to_rfc <url> <session-name>`.
+   - If the user gives a change area, pass it as `--scope`, for example `--scope "Backend, Frontend"`.
+   - If the user gives repository ownership or implementation hints, save them in a small Markdown context file and pass it as `--context <context.md>`.
    - URL-based PRD pulls require Lark CLI.
    - The standard fetch command is built in; use `PRD_TO_RFC_FETCH_CMD` only to override it.
    - If the input is a file, use `prd_to_rfc --from-file <prd.md> <session-name>`.
@@ -35,7 +37,11 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
 4. Create `rfc.md`.
    - Use `templates/rfc.md`.
    - Convert product requirements into engineering implications.
+   - Use the requested scope to focus the RFC on backend, frontend, QA, data/analytics, release, or any other named implementation area.
+   - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC and fill the Repository Analysis table with file-backed conclusions.
+   - Include a Mermaid diagram in the System Design section. Prefer a flowchart or sequence diagram that reflects the actual repository boundaries and data/control flow.
    - Include non-goals, API changes, data model changes, edge cases, observability, rollout, risks, and open questions.
+   - Include the implementation task checklist at the bottom of the RFC so reviewers can see the work breakdown without opening `tasks.md`.
 
 5. Create `tasks.md`.
    - Use `templates/tasks.md`.

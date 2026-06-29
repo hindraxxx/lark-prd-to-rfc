@@ -32,6 +32,8 @@ export async function generateArtifacts(options) {
   const source = await loadSource(options);
   const prdMarkdown = ensurePrdMarkdown(source.markdown, source.label);
   const title = titleFromMarkdown(prdMarkdown);
+  const context = await loadContext(options.contextFile);
+  const scope = options.scope ?? "TODO: Backend, Frontend, QA, Data / Analytics, Release, or another explicit area.";
 
   const rfcTemplate = await readFile(new URL("../templates/rfc.md", import.meta.url), "utf8");
   const tasksTemplate = await readFile(new URL("../templates/tasks.md", import.meta.url), "utf8");
@@ -39,12 +41,16 @@ export async function generateArtifacts(options) {
   const rfcMarkdown = renderFromTemplate(rfcTemplate, {
     title,
     source: source.label,
-    prd: prdMarkdown
+    prd: prdMarkdown,
+    scope,
+    context
   });
 
   const tasksMarkdown = renderFromTemplate(tasksTemplate, {
     title,
-    source: source.label
+    source: source.label,
+    scope,
+    context
   });
 
   const prdPath = join(options.outDir, "prd.md");
@@ -155,4 +161,18 @@ async function loadSource(options) {
   }
 
   throw new Error("Provide either --from-file or --url.");
+}
+
+async function loadContext(contextFile) {
+  if (!contextFile) {
+    return [
+      "TODO: Add repository context before finalizing the RFC. Example:",
+      "",
+      "- Backend: `/path/to/repo-a` owns user APIs and user domain changes.",
+      "- Frontend: `/path/to/repo-b` owns settings UI and user-facing copy.",
+      "- Shared contracts: `/path/to/repo-c` owns generated API clients or schemas."
+    ].join("\n");
+  }
+
+  return readFile(contextFile, "utf8");
 }

@@ -27,7 +27,9 @@ async function main() {
     const result = await generateArtifacts({
       url: valueOf("--url"),
       fromFile: valueOf("--from-file"),
-      outDir: valueOf("--out-dir") ?? "./output"
+      outDir: valueOf("--out-dir") ?? "./output",
+      scope: valueOf("--scope"),
+      contextFile: valueOf("--context")
     });
 
     console.log("Generated artifacts:");
@@ -94,13 +96,14 @@ Commands:
   pull --url <lark-url> --out-dir <dir>
   generate --from-file <path> --out-dir <dir>
   generate --url <lark-url> --out-dir <dir>
+    [--scope <Backend|Frontend|QA|Data|Release|...>] [--context <context.md>]
   html --rfc-file <path> [--out-file <path>]
   push --html-file <path> [--rfc-file <path>] [--state-file <path>] --title <title> [--parent <lark-folder-or-doc>]
   parse-url --url <lark-url>
 
 Examples:
   PRD_TO_RFC_FETCH_CMD='lark-cli docs +fetch --doc "{{url}}" --doc-format markdown --jq ".data.document.content"' node ./src/cli.js pull --url "https://example.larksuite.com/docx/xxxx" --out-dir ./output/my-prd
-  node ./src/cli.js generate --from-file ./examples/sample-prd.md --out-dir ./output/demo
+  node ./src/cli.js generate --from-file ./examples/sample-prd.md --out-dir ./output/demo --scope "Backend, Frontend" --context ./context.md
   node ./src/cli.js html --rfc-file ./output/demo/rfc.md --out-file ./output/demo/rfc.lark.html
   PRD_TO_RFC_PUSH_CMD='lark-cli docs +create --doc-format markdown --title "{{title}}" --content @{{rfc_file}}' node ./src/cli.js push --html-file ./output/demo/rfc.lark.html --rfc-file ./output/demo/rfc.md --title "RFC: Demo"
   node ./src/cli.js parse-url --url "https://example.larksuite.com/docx/xxxx"
