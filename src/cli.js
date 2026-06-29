@@ -70,6 +70,7 @@ async function main() {
     const result = await pushRfc({
       htmlFile: valueOf("--html-file"),
       rfcFile: valueOf("--rfc-file"),
+      stateFile: valueOf("--state-file"),
       title: valueOf("--title"),
       parent: valueOf("--parent")
     });
@@ -94,7 +95,7 @@ Commands:
   generate --from-file <path> --out-dir <dir>
   generate --url <lark-url> --out-dir <dir>
   html --rfc-file <path> [--out-file <path>]
-  push --html-file <path> [--rfc-file <path>] --title <title> [--parent <lark-folder-or-doc>]
+  push --html-file <path> [--rfc-file <path>] [--state-file <path>] --title <title> [--parent <lark-folder-or-doc>]
   parse-url --url <lark-url>
 
 Examples:

@@ -24,6 +24,7 @@ output/<session-name>/prd.md
 output/<session-name>/rfc.md
 output/<session-name>/tasks.md
 output/<session-name>/rfc.lark.html
+output/<session-name>/lark-rfc.json
 ```
 
 ## Rules For Changes
@@ -38,6 +39,7 @@ output/<session-name>/rfc.lark.html
 - Keep `opencode.json` pointing to `.agents/skills` so OpenCode can discover repo-local skills.
 - Do not require MCP.
 - Require Lark CLI for URL-based PRD pulls. Do not generate placeholder PRDs from URLs.
+- First Lark RFC push should create `lark-rfc.json`; later pushes should update the saved doc, not create duplicates.
 - Do not bake credentials into the repo.
 - Use env-configured command hooks for Lark integration:
   - `LARK_CLI_BIN`

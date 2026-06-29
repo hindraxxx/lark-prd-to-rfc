@@ -75,14 +75,16 @@ if [[ "$input" == "--push" ]]; then
   if [[ -d "$target" ]]; then
     html_file="$target/rfc.lark.html"
     rfc_file="$target/rfc.md"
+    state_file="$target/lark-rfc.json"
     title="${RFC_TITLE:-RFC: $(basename "$target")}"
   else
     html_file="$target"
     rfc_file="${target%.lark.html}.md"
+    state_file="$(dirname "$target")/lark-rfc.json"
     title="${RFC_TITLE:-RFC: $(basename "${target%.*}")}"
   fi
 
-  node ./src/cli.js push --html-file "$html_file" --rfc-file "$rfc_file" --title "$title"
+  node ./src/cli.js push --html-file "$html_file" --rfc-file "$rfc_file" --state-file "$state_file" --title "$title"
   exit 0
 fi
 
@@ -124,15 +126,16 @@ if [[ "${PRD_TO_RFC_SKIP_PUSH:-}" == "1" ]]; then
   echo "Skipped Lark push because PRD_TO_RFC_SKIP_PUSH=1."
 elif [[ -n "${PRD_TO_RFC_PUSH_CMD:-}" ]]; then
   title="${RFC_TITLE:-RFC: $(basename "$out_dir")}"
-  node ./src/cli.js push --html-file "$out_dir/rfc.lark.html" --rfc-file "$out_dir/rfc.md" --title "$title"
+  node ./src/cli.js push --html-file "$out_dir/rfc.lark.html" --rfc-file "$out_dir/rfc.md" --state-file "$out_dir/lark-rfc.json" --title "$title"
 else
   if ! lark_bin="$(resolve_lark_cli)"; then
     echo "Missing required Lark CLI for push. Expected lark-cli or lark on PATH." >&2
     exit 1
   fi
   export PRD_TO_RFC_PUSH_CMD="$lark_bin docs +create --doc-format markdown --title \"{{title}}\" --content @{{rfc_file}}"
+  export PRD_TO_RFC_UPDATE_CMD="$lark_bin docs +update --doc \"{{doc}}\" --command overwrite --doc-format markdown --content @{{rfc_file}}"
   title="${RFC_TITLE:-RFC: $(basename "$out_dir")}"
-  node ./src/cli.js push --html-file "$out_dir/rfc.lark.html" --rfc-file "$out_dir/rfc.md" --title "$title"
+  node ./src/cli.js push --html-file "$out_dir/rfc.lark.html" --rfc-file "$out_dir/rfc.md" --state-file "$out_dir/lark-rfc.json" --title "$title"
 fi
 
 echo ""

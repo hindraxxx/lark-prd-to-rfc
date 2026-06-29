@@ -44,6 +44,8 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
 
 6. Push back to Lark only after the Markdown is reviewable.
    - Push uses `rfc.md` with `lark-cli docs +create --doc-format markdown` by default.
+   - First push creates `output/<session>/lark-rfc.json` with the Lark RFC URL/token.
+   - Later pushes update the saved RFC doc with `lark-cli docs +update --command overwrite`.
    - Use `PRD_TO_RFC_SKIP_PUSH=1` when the user only wants local artifacts.
    - Create a new Lark doc titled `RFC: <feature name>`.
    - Link back to the source PRD.

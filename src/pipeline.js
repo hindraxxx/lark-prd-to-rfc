@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { parseLarkUrl } from "./lark-url.js";
 import { ensurePrdMarkdown, markdownToLarkHtml, renderFromTemplate, titleFromMarkdown } from "./markdown.js";
 import { runConfiguredCommand } from "./shell.js";
@@ -75,20 +75,71 @@ export async function generateLarkHtml(options) {
 
 export async function pushRfc(options) {
   if (!options.htmlFile) throw new Error("Provide --html-file for push.");
-  if (!process.env.PRD_TO_RFC_PUSH_CMD) {
-    throw new Error("Set PRD_TO_RFC_PUSH_CMD, or use run.sh/prd_to_rfc so the standard lark-cli create command is applied.");
+  const rfcFile = options.rfcFile ?? options.htmlFile.replace(/\.lark\.html$/i, ".md");
+  const stateFile = options.stateFile ?? join(dirname(rfcFile), "lark-rfc.json");
+  const state = await readJsonIfExists(stateFile);
+  const command = state?.documentUrl || state?.documentToken
+    ? process.env.PRD_TO_RFC_UPDATE_CMD
+    : process.env.PRD_TO_RFC_PUSH_CMD;
+
+  if (!command) {
+    throw new Error("Set PRD_TO_RFC_PUSH_CMD/PRD_TO_RFC_UPDATE_CMD, or use run.sh/prd_to_rfc so standard lark-cli commands are applied.");
   }
 
   const html = await readFile(options.htmlFile, "utf8");
-  const result = await runConfiguredCommand(process.env.PRD_TO_RFC_PUSH_CMD, {
+  const result = await runConfiguredCommand(command, {
     html_file: options.htmlFile,
-    rfc_file: options.rfcFile ?? options.htmlFile.replace(/\.lark\.html$/i, ".md"),
+    rfc_file: rfcFile,
+    doc: state?.documentUrl ?? state?.documentToken ?? "",
     title: options.title ?? "RFC Draft",
     parent: options.parent ?? "",
     html
   });
 
+  const nextState = buildPushState({
+    previous: state,
+    result,
+    stateFile,
+    title: options.title ?? "RFC Draft",
+    rfcFile,
+    htmlFile: options.htmlFile
+  });
+  await writeFile(stateFile, JSON.stringify(nextState, null, 2) + "\n", "utf8");
+
   return result.trim();
+}
+
+async function readJsonIfExists(path) {
+  try {
+    return JSON.parse(await readFile(path, "utf8"));
+  } catch (error) {
+    if (error.code === "ENOENT") return undefined;
+    throw error;
+  }
+}
+
+function buildPushState({ previous, result, stateFile, title, rfcFile, htmlFile }) {
+  const parsed = tryParseJson(result);
+  const document = parsed?.data?.document ?? {};
+
+  return {
+    title,
+    documentUrl: document.url ?? previous?.documentUrl ?? "",
+    documentToken: document.document_id ?? document.token ?? previous?.documentToken ?? "",
+    lastPushedAt: new Date().toISOString(),
+    lastResult: parsed ?? result,
+    rfcFile,
+    htmlFile,
+    stateFile
+  };
+}
+
+function tryParseJson(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
 }
 
 async function loadSource(options) {

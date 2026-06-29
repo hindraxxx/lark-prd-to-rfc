@@ -93,6 +93,14 @@ This fetches the PRD, generates local artifacts, and creates an RFC doc in Lark.
 PRD_TO_RFC_SKIP_PUSH=1 prd_to_rfc "https://example.larksuite.com/docx/abc123" demo
 ```
 
+Push behavior is stateful per session:
+
+```text
+output/demo/lark-rfc.json
+```
+
+If that file does not exist, push creates a new Lark document and saves its URL/token. If it exists, push updates the saved document instead of creating a duplicate.
+
 From an existing local PRD file:
 
 ```bash
@@ -148,12 +156,14 @@ Standard commands:
 ```bash
 lark-cli docs +fetch --doc "<url>" --doc-format markdown --jq ".data.document.content"
 lark-cli docs +create --doc-format markdown --title "<title>" --content @output/<session>/rfc.md
+lark-cli docs +update --doc "<saved-rfc-url>" --command overwrite --doc-format markdown --content @output/<session>/rfc.md
 ```
 
 Override hooks remain available:
 
 - `PRD_TO_RFC_FETCH_CMD` must print PRD content to stdout.
 - `PRD_TO_RFC_PUSH_CMD` must create/update a Lark document. For `lark-cli`, use `{{rfc_file}}` with `--doc-format markdown`.
+- `PRD_TO_RFC_UPDATE_CMD` can override updates to an existing saved RFC doc.
 - `LARK_CLI_BIN` can override the required Lark CLI binary name/path; auto-detect checks `lark-cli` then `lark`.
 - `PRD_TO_RFC_SKIP_PUSH=1` disables automatic Lark doc creation.
 
@@ -171,6 +181,7 @@ Available template variables for push:
 ```text
 {{html_file}}
 {{rfc_file}}
+{{doc}}
 {{title}}
 {{parent}}
 ```
