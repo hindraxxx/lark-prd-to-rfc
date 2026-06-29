@@ -41,18 +41,7 @@
 <h2>Out of scope</h2>
 <p>TODO: Brief summary of items not covered as part of the solution.</p>
 <h1>Solution</h1>
-<p>TODO: Describe the recommended implementation approach. Call out what we will be doing, what we will NOT be doing, and assumptions.</p>
-<h1>Implementation Context</h1>
-{{context}}
-<h1>System Design</h1>
-<whiteboard type="mermaid">
-flowchart TD
-  PRD[Product requirement] --> RFC[Engineering RFC]
-  RFC --> RepoAnalysis[Repository analysis]
-  RepoAnalysis --> Design[Proposed design]
-  Design --> Implementation[Implementation tasks]
-  Implementation --> Rollout[Rollout and validation]
-</whiteboard>
+<p>TODO: Describe the recommended implementation approach. Call out what we will be doing, what we will NOT be doing, and assumptions. Fold any repository / codebase findings here and into the per-story Technical Approach (cite file:line) — do not create a separate Repository Analysis or Implementation Context section.</p>
 <h1>User Story: TODO-001 — [Story Title]</h1>
 <p><b>As</b> [actor/role], <b>I want</b> [goal or capability], <b>so that</b> [business benefit].</p>
 <h2>Acceptance Criteria</h2>
@@ -65,20 +54,22 @@ flowchart TD
 </tbody>
 </table>
 <h3>Technical Approach</h3>
-<h4>Approach #1 (Preferred)</h4>
-<h5>Overview (Optional)</h5>
-<p>TODO: In-depth detail around approach.</p>
-<h5>Block Diagram (Optional)</h5>
-<p>TODO: A pictorial representation/architecture diagram.</p>
-<h5>Sequence Diagram (Optional)</h5>
-<p>TODO: A flow diagram/sequence to walk through the approach.</p>
-<pre lang="Plain Text"><code>[Actor]         [Service A]        [Service B]
-   |                 |                  |
-   |-- Request -----&gt;|                  |
-   |                 |-- Call ---------&gt;|
-   |                 |&lt;-- Response -----|
-   |&lt;-- Response ----|</code></pre>
-<h5>Database Modelling (Optional)</h5>
+<callout emoji="💡">A single approach is the default. Only add an "Approach #2" block when there is a genuine alternative solution to weigh; otherwise delete this note and keep one approach.</callout>
+<h4>Overview</h4>
+<p>TODO: Describe how this story is implemented, citing concrete file:line references from the affected repositories.</p>
+<h4>Sequence Diagram</h4>
+<whiteboard type="mermaid">
+sequenceDiagram
+  autonumber
+  participant Client
+  participant BFF
+  participant Service
+  Client->>BFF: TODO: request
+  BFF->>Service: TODO: downstream call
+  Service-->>BFF: TODO: response
+  BFF-->>Client: TODO: response
+</whiteboard>
+<h4>Database Modelling (Optional)</h4>
 <table>
 <colgroup><col/><col/><col/><col/><col/><col/></colgroup>
 <tbody>
@@ -87,55 +78,21 @@ flowchart TD
 <tr><td><p><code>[table_name]</code> (modified)</p></td><td><p><code>new_field</code></p></td><td><p>BOOLEAN</p></td><td><p>Yes</p></td><td><p>[Description]</p></td><td><p>Yes — <code>ALTER TABLE ...</code></p></td></tr>
 </tbody>
 </table>
-<h5>APIs (Optional)</h5>
+<h4>APIs (Optional)</h4>
 <p>TODO: API addition/changes.</p>
-<h5>Events / Queue Changes (Optional)</h5>
+<h4>Events / Queue Changes (Optional)</h4>
 <table>
 <colgroup><col/><col/><col/><col/><col/></colgroup>
 <tbody>
 <tr><td><p><b>Topic / Queue</b></p></td><td><p><b>Change</b></p></td><td><p><b>Producer</b></p></td><td><p><b>Consumer</b></p></td><td><p><b>Payload Delta</b></p></td></tr>
 <tr><td><p><code>[topic.name]</code></p></td><td><p>Add</p></td><td><p>[Service A]</p></td><td><p>[Service B]</p></td><td><p>New field: <code>category</code> (string)</p></td></tr>
-<tr><td><p><code>[topic.name]</code></p></td><td><p>Update</p></td><td><p>[Service A]</p></td><td><p>[Service B]</p></td><td><p>Added field <code>x</code>, removed field <code>y</code></p></td></tr>
 </tbody>
 </table>
+<h4>Pros / Cons (Optional)</h4>
 <table>
 <colgroup><col/><col/></colgroup>
 <thead><tr><th><p>Pros</p></th><th><p>Cons</p></th></tr></thead>
-<tbody><tr><td><ul><li>Point 1</li><li>Point 2</li><li>Point 3</li></ul></td><td><ul><li>Point 1</li><li>Point 2</li><li>Point 3</li></ul></td></tr></tbody>
-</table>
-<readonly-block type="isv"></readonly-block>
-<h4>Approach #2</h4>
-<h5>Overview (Optional)</h5>
-<p>TODO: In-depth detail around approach.</p>
-<h5>Block Diagram (Optional)</h5>
-<p>TODO: A pictorial representation/architecture diagram.</p>
-<h5>Sequence Diagram (Optional)</h5>
-<p>TODO: A flow diagram/sequence to walk through the approach.</p>
-<readonly-block type="isv"></readonly-block>
-<h5>Database Modelling (Optional)</h5>
-<table>
-<colgroup><col/><col/><col/><col/><col/><col/></colgroup>
-<tbody>
-<tr><td><p><b>Table / Cache Key</b></p></td><td><p><b>Field</b></p></td><td><p><b>Type</b></p></td><td><p><b>Nullable</b></p></td><td><p><b>Description</b></p></td><td><p><b>Migration Required?</b></p></td></tr>
-<tr><td><p><code>[table_name]</code> (new)</p></td><td><p><code>field_name</code></p></td><td><p>VARCHAR(255)</p></td><td><p>No</p></td><td><p>[Description]</p></td><td><p>No — new table</p></td></tr>
-<tr><td><p><code>[table_name]</code> (modified)</p></td><td><p><code>new_field</code></p></td><td><p>BOOLEAN</p></td><td><p>Yes</p></td><td><p>[Description]</p></td><td><p>Yes — <code>ALTER TABLE ...</code></p></td></tr>
-</tbody>
-</table>
-<h5>APIs (Optional)</h5>
-<p>TODO: API addition/changes.</p>
-<h5>Events / Queue Changes (Optional)</h5>
-<table>
-<colgroup><col/><col/><col/><col/><col/></colgroup>
-<tbody>
-<tr><td><p><b>Topic / Queue</b></p></td><td><p><b>Change</b></p></td><td><p><b>Producer</b></p></td><td><p><b>Consumer</b></p></td><td><p><b>Payload Delta</b></p></td></tr>
-<tr><td><p><code>[topic.name]</code></p></td><td><p>Add</p></td><td><p>[Service A]</p></td><td><p>[Service B]</p></td><td><p>New field: <code>category</code> (string)</p></td></tr>
-<tr><td><p><code>[topic.name]</code></p></td><td><p>Update</p></td><td><p>[Service A]</p></td><td><p>[Service B]</p></td><td><p>Added field <code>x</code>, removed field <code>y</code></p></td></tr>
-</tbody>
-</table>
-<table>
-<colgroup><col/><col/></colgroup>
-<thead><tr><th><p>Pros</p></th><th><p>Cons</p></th></tr></thead>
-<tbody><tr><td><ul><li>Point 1</li><li>Point 2</li><li>Point 3</li></ul></td><td><ul><li>Point 1</li><li>Point 2</li><li>Point 3</li></ul></td></tr></tbody>
+<tbody><tr><td><ul><li>Point 1</li></ul></td><td><ul><li>Point 1</li></ul></td></tr></tbody>
 </table>
 <readonly-block type="isv"></readonly-block>
 <h1>Dependencies</h1>

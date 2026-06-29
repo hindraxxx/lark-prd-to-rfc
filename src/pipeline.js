@@ -32,7 +32,6 @@ export async function generateArtifacts(options) {
   const source = await loadSource(options);
   const prdMarkdown = ensurePrdMarkdown(source.markdown, source.label);
   const title = titleFromMarkdown(prdMarkdown);
-  const context = await loadContext(options.contextFile);
   const scope = options.scope ?? "TODO: Backend, Frontend, QA, Data / Analytics, Release, or another explicit area.";
 
   const rfcXmlTemplate = await readFile(new URL("../templates/rfc.lark.xml", import.meta.url), "utf8");
@@ -40,29 +39,25 @@ export async function generateArtifacts(options) {
   const tasksTemplate = await readFile(new URL("../templates/tasks.md", import.meta.url), "utf8");
 
   const prdXml = markdownToLarkXml(prdMarkdown);
-  const contextXml = markdownToLarkXml(context);
 
   const rfcXml = renderFromTemplate(rfcXmlTemplate, {
     title,
     source: source.label,
     prd: prdXml,
-    scope,
-    context: contextXml
+    scope
   });
 
   const rfcMarkdown = renderFromTemplate(rfcMdTemplate, {
     title,
     source: source.label,
     prd: prdMarkdown,
-    scope,
-    context
+    scope
   });
 
   const tasksMarkdown = renderFromTemplate(tasksTemplate, {
     title,
     source: source.label,
-    scope,
-    context
+    scope
   });
 
   const prdPath = join(options.outDir, "prd.md");
@@ -187,18 +182,4 @@ async function loadSource(options) {
   }
 
   throw new Error("Provide either --from-file or --url.");
-}
-
-async function loadContext(contextFile) {
-  if (!contextFile) {
-    return [
-      "TODO: Add repository context before finalizing the RFC. Example:",
-      "",
-      "- Backend: `/path/to/repo-a` owns user APIs and user domain changes.",
-      "- Frontend: `/path/to/repo-b` owns settings UI and user-facing copy.",
-      "- Shared contracts: `/path/to/repo-c` owns generated API clients or schemas."
-    ].join("\n");
-  }
-
-  return readFile(contextFile, "utf8");
 }

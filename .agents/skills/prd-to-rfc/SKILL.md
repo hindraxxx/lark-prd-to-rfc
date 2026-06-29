@@ -17,7 +17,7 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
 1. Pull the source.
    - If the input is a Lark URL, invoke `prd_to_rfc <url> <session-name>`.
    - If the user gives a change area, pass it as `--scope`, for example `--scope "Backend, Frontend"`.
-   - If the user gives repository ownership or implementation hints, save them in a small Markdown context file and pass it as `--context <context.md>`.
+   - If the user gives repository ownership or implementation hints, save them in a small Markdown context file and pass it as `--context <context.md>`. The pipeline no longer renders this file into a dedicated section; read it yourself and fold the details into Current State / Solution / per-story Technical Approach.
    - URL-based PRD pulls require Lark CLI.
    - The standard fetch command is built in; use `PRD_TO_RFC_FETCH_CMD` only to override it.
    - If the input is a file, use `prd_to_rfc --from-file <prd.md> <session-name>`.
@@ -40,8 +40,9 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
    - `rfc.md` is a portable Markdown mirror for GitHub rendering; generated once, not the source of truth after edits.
    - Convert product requirements into engineering implications.
    - Use the requested scope to focus the RFC on backend, frontend, QA, data/analytics, release, or any other named implementation area.
-   - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC and fill the relevant sections with file-backed conclusions.
-   - The System Design section includes a `<whiteboard type="mermaid">` block (XML) / ` ```mermaid ` fenced code block (Markdown). Prefer a flowchart or sequence diagram that reflects the actual repository boundaries and data/control flow.
+   - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC. Fold file-backed findings (with `file:line` references) directly into **Current State**, **Solution**, and the per-story **Technical Approach**. Do **not** create a dedicated "Repository Analysis" or "Implementation Context" section — the template no longer has one.
+   - Each **User Story** includes its own `<whiteboard type="mermaid">` sequence diagram (XML) / ` ```mermaid ` fenced code block (Markdown) describing that story's control flow across the real repository boundaries. Do not put one big diagram in a separate System Design section (that section was removed).
+   - The **Technical Approach** defaults to a single approach. Only add an "Approach #2" block when there is a genuine alternative solution to weigh; otherwise keep one approach and delete the callout/note about alternatives.
    - Include non-goals, API changes, data model changes, edge cases, observability, rollout, risks, and open questions.
    - Include the implementation task checklist at the bottom of the RFC so reviewers can see the work breakdown without opening `tasks.md`.
 

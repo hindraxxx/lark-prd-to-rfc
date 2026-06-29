@@ -3,10 +3,6 @@
 Source PRD: {{source}}
 Requested Change Scope: {{scope}}
 
-## Implementation Context
-
-{{context}}
-
 ## Backend
 
 - [ ] TODO: Define backend work from RFC.

@@ -83,7 +83,7 @@ prd_to_rfc <lark-prd-url> [session-name] [--scope <area>] [--context <context.md
 
 The session name can be any product/session name. `demo` maps to `output/demo/`. If you omit it, the script uses the Lark doc token.
 
-When the RFC requires codebase context, give the agent the repository list before final review. The base RFC template (sourced from the canonical Lark RFC template) includes a metadata table, Glossary, Background, Current State, Desired State, Solution, User Story with Acceptance Criteria, multi-approach Technical Approach, Cross-Cutting Checklist, Rollout/Rollback Plans, and review-meeting notes. The System Design section contains a `<whiteboard type="mermaid">` block. `rfc.lark.xml` is the primary editable artifact; `rfc.md` is a portable Markdown mirror for GitHub reading.
+When the RFC requires codebase context, give the agent the repository list before final review. The base RFC template (sourced from the canonical Lark RFC template) includes a metadata table, Glossary, Background, Current State, Desired State, Solution, User Story with Acceptance Criteria, a single Technical Approach (multi-approach is optional, only when there are real alternatives), Cross-Cutting Checklist, Rollout/Rollback Plans, and review-meeting notes. Each User Story carries its own `<whiteboard type="mermaid">` sequence diagram; there is no separate System Design section, and no Repository Analysis / Implementation Context section — codebase findings are folded into Current State, Solution, and the per-story Technical Approach with `file:line` references. `rfc.lark.xml` is the primary editable artifact; `rfc.md` is a portable Markdown mirror for GitHub reading.
 
 Use `--scope` to tell the RFC which implementation area to emphasize:
 

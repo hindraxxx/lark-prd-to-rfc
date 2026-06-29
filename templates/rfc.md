@@ -38,24 +38,7 @@ TODO: Describe what the system looks like AFTER this RFC is fully implemented. F
 
 ## Solution
 
-TODO: Describe the recommended implementation approach. Call out what we will be doing, what we will NOT be doing, and assumptions.
-
-## Implementation Context
-
-{{context}}
-
-## System Design
-
-TODO: Capture services, data flow, sequence, and ownership boundaries.
-
-```mermaid
-flowchart TD
-  PRD[Product requirement] --> RFC[Engineering RFC]
-  RFC --> RepoAnalysis[Repository analysis]
-  RepoAnalysis --> Design[Proposed design]
-  Design --> Implementation[Implementation tasks]
-  Implementation --> Rollout[Rollout and validation]
-```
+TODO: Describe the recommended implementation approach. Call out what we will be doing, what we will NOT be doing, and assumptions. Fold any repository / codebase findings here and into the per-story Technical Approach (cite file:line) — do not create a separate Repository Analysis or Implementation Context section.
 
 ## User Story: TODO-001 — [Story Title]
 
@@ -70,29 +53,26 @@ flowchart TD
 
 ### Technical Approach
 
-#### Approach #1 (Preferred)
+> A single approach is the default. Only add an "Approach #2" block when there is a genuine alternative solution to weigh; otherwise keep one approach.
 
-- TODO: Overview.
-- TODO: Block diagram.
-- TODO: Sequence diagram.
-- TODO: Database modelling.
-- TODO: APIs.
-- TODO: Events / Queue changes.
+- TODO: Overview — describe how this story is implemented, citing concrete file:line references from the affected repositories.
 
-**Pros:** TODO.
-**Cons:** TODO.
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Client
+  participant BFF
+  participant Service
+  Client->>BFF: TODO: request
+  BFF->>Service: TODO: downstream call
+  Service-->>BFF: TODO: response
+  BFF-->>Client: TODO: response
+```
 
-#### Approach #2
-
-- TODO: Overview.
-- TODO: Block diagram.
-- TODO: Sequence diagram.
-- TODO: Database modelling.
-- TODO: APIs.
-- TODO: Events / Queue changes.
-
-**Pros:** TODO.
-**Cons:** TODO.
+- TODO: Database modelling (optional).
+- TODO: APIs (optional).
+- TODO: Events / Queue changes (optional).
+- TODO: Pros / Cons (optional).
 
 ## Dependencies
 
