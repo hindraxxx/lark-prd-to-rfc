@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { parseLarkUrl } from "./lark-url.js";
-import { ensurePrdMarkdown, markdownToLarkMarkdown, markdownToLarkXml, renderFromTemplate, titleFromMarkdown, wrapXmlInHtml } from "./markdown.js";
+import { ensurePrdMarkdown, markdownToLarkXml, renderFromTemplate, titleFromMarkdown } from "./markdown.js";
 import { runConfiguredCommand } from "./shell.js";
 
 export async function pullPrd(options) {
@@ -35,7 +35,6 @@ export async function generateArtifacts(options) {
   const scope = options.scope ?? "TODO: Backend, Frontend, QA, Data / Analytics, Release, or another explicit area.";
 
   const rfcXmlTemplate = await readFile(new URL("../templates/rfc.lark.xml", import.meta.url), "utf8");
-  const rfcMdTemplate = await readFile(new URL("../templates/rfc.md", import.meta.url), "utf8");
   const tasksTemplate = await readFile(new URL("../templates/tasks.md", import.meta.url), "utf8");
 
   const prdXml = markdownToLarkXml(prdMarkdown);
@@ -47,13 +46,6 @@ export async function generateArtifacts(options) {
     scope
   });
 
-  const rfcMarkdown = renderFromTemplate(rfcMdTemplate, {
-    title,
-    source: source.label,
-    prd: prdMarkdown,
-    scope
-  });
-
   const tasksMarkdown = renderFromTemplate(tasksTemplate, {
     title,
     source: source.label,
@@ -61,49 +53,19 @@ export async function generateArtifacts(options) {
   });
 
   const prdPath = join(options.outDir, "prd.md");
-  const rfcPath = join(options.outDir, "rfc.md");
   const tasksPath = join(options.outDir, "tasks.md");
-  const larkMdPath = join(options.outDir, "rfc.lark.md");
   const larkXmlPath = join(options.outDir, "rfc.lark.xml");
-  const larkHtmlPath = join(options.outDir, "rfc.lark.html");
-  const larkMd = markdownToLarkMarkdown(rfcMarkdown);
-  const larkHtml = wrapXmlInHtml(rfcXml);
 
   await writeFile(prdPath, prdMarkdown + "\n", "utf8");
-  await writeFile(rfcPath, rfcMarkdown + "\n", "utf8");
   await writeFile(tasksPath, tasksMarkdown + "\n", "utf8");
-  await writeFile(larkMdPath, larkMd + "\n", "utf8");
   await writeFile(larkXmlPath, rfcXml + "\n", "utf8");
-  await writeFile(larkHtmlPath, larkHtml + "\n", "utf8");
 
-  return { prdPath, rfcPath, tasksPath, larkMdPath, larkXmlPath, larkHtmlPath, source };
-}
-
-export async function generateLarkHtml(options) {
-  if (!options.xmlFile) throw new Error("Provide --xml-file for html.");
-
-  const xml = await readFile(options.xmlFile, "utf8");
-  const htmlPath = options.outFile ?? options.xmlFile.replace(/\.lark\.xml$/i, ".lark.html");
-  const html = wrapXmlInHtml(xml);
-
-  await writeFile(htmlPath, html + "\n", "utf8");
-
-  return { htmlPath };
+  return { prdPath, tasksPath, larkXmlPath, source };
 }
 
 export async function pushRfc(options) {
-  if (!options.htmlFile) throw new Error("Provide --html-file for push.");
-  let rfcFile = options.rfcFile ?? options.htmlFile.replace(/\.lark\.html$/i, ".md");
-  const larkMdCandidate = rfcFile.replace(/\.md$/i, ".lark.md");
-  if (!options.rfcFile) {
-    try {
-      await readFile(larkMdCandidate, "utf8");
-      rfcFile = larkMdCandidate;
-    } catch {
-      // rfc.lark.md not found; fall back to rfc.md
-    }
-  }
-  const stateFile = options.stateFile ?? join(dirname(rfcFile), "lark-rfc.json");
+  if (!options.rfcFile) throw new Error("Provide --rfc-file for push.");
+  const stateFile = options.stateFile ?? join(dirname(options.rfcFile), "lark-rfc.json");
   const state = await readJsonIfExists(stateFile);
   const command = state?.documentUrl || state?.documentToken
     ? process.env.PRD_TO_RFC_UPDATE_CMD
@@ -113,14 +75,11 @@ export async function pushRfc(options) {
     throw new Error("Set PRD_TO_RFC_PUSH_CMD/PRD_TO_RFC_UPDATE_CMD, or use run.sh/prd_to_rfc so standard lark-cli commands are applied.");
   }
 
-  const html = await readFile(options.htmlFile, "utf8");
   const result = await runConfiguredCommand(command, {
-    html_file: options.htmlFile,
-    rfc_file: rfcFile,
+    rfc_file: options.rfcFile,
     doc: state?.documentUrl ?? state?.documentToken ?? "",
     title: options.title ?? "RFC Draft",
-    parent: options.parent ?? "",
-    html
+    parent: options.parent ?? ""
   });
 
   const nextState = buildPushState({
@@ -128,8 +87,7 @@ export async function pushRfc(options) {
     result,
     stateFile,
     title: options.title ?? "RFC Draft",
-    rfcFile,
-    htmlFile: options.htmlFile
+    rfcFile: options.rfcFile
   });
   await writeFile(stateFile, JSON.stringify(nextState, null, 2) + "\n", "utf8");
 
@@ -145,7 +103,7 @@ async function readJsonIfExists(path) {
   }
 }
 
-function buildPushState({ previous, result, stateFile, title, rfcFile, htmlFile }) {
+function buildPushState({ previous, result, stateFile, title, rfcFile }) {
   const parsed = tryParseJson(result);
   const document = parsed?.data?.document ?? {};
 
@@ -156,7 +114,6 @@ function buildPushState({ previous, result, stateFile, title, rfcFile, htmlFile 
     lastPushedAt: new Date().toISOString(),
     lastResult: parsed ?? result,
     rfcFile,
-    htmlFile,
     stateFile
   };
 }

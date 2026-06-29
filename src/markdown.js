@@ -62,25 +62,6 @@ export function markdownToLarkMarkdown(markdown) {
   );
 }
 
-export function wrapXmlInHtml(xml) {
-  return [
-    "<!doctype html>",
-    '<html lang="en">',
-    "<head>",
-    '  <meta charset="utf-8">',
-    "  <title>RFC</title>",
-    "</head>",
-    "<body>",
-    xml,
-    "</body>",
-    "</html>"
-  ].join("\n");
-}
-
-export function markdownToLarkHtml(markdown) {
-  return wrapXmlInHtml(markdownToLarkXml(markdown));
-}
-
 export function markdownToLarkXml(markdown) {
   const larkMarkdown = markdownToLarkMarkdown(markdown);
   const lines = larkMarkdown.split(/\r?\n/);

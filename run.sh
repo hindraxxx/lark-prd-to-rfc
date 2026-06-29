@@ -4,10 +4,9 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  prd_to_rfc <lark-prd-url> [session-name] [--scope <area>] [--context <context.md>]
-  prd_to_rfc --from-file <prd.md> [session-name] [--scope <area>] [--context <context.md>]
-  prd_to_rfc --html <out-dir-or-rfc.lark.xml>
-  prd_to_rfc --push <out-dir-or-html-file>
+  prd_to_rfc <lark-prd-url> [session-name] [--scope <area>]
+  prd_to_rfc --from-file <prd.md> [session-name] [--scope <area>]
+  prd_to_rfc --push <out-dir-or-rfc.lark.xml>
 
 Optional env:
   LARK_CLI_BIN          Lark CLI binary name/path; auto-detects lark-cli then lark
@@ -17,11 +16,10 @@ Optional env:
   RFC_TITLE             title to use when pushing RFC to Lark
 
 Examples:
-  prd_to_rfc "https://example.larksuite.com/docx/abc123" docs_name --scope "Backend, Frontend" --context ./rfc-context.md
+  prd_to_rfc "https://example.larksuite.com/docx/abc123" docs_name --scope "Backend, Frontend"
 
   PRD_TO_RFC_SKIP_PUSH=1 prd_to_rfc "https://example.larksuite.com/docx/abc123" demo
 
-  regenerate_rfc demo
   prd_to_rfc --push ./output/demo
 EOF
 }
@@ -45,28 +43,6 @@ session_name="${2:-}"
 scope=""
 context_file=""
 
-if [[ "$input" == "--html" ]]; then
-  if [[ $# -lt 2 ]]; then
-    echo "Missing path after --html" >&2
-    exit 1
-  fi
-
-  target="$2"
-  if [[ -d "$target" ]]; then
-    xml_file="$target/rfc.lark.xml"
-    html_file="$target/rfc.lark.html"
-  else
-    xml_file="$target"
-    html_file="${target%.lark.xml}.lark.html"
-  fi
-
-  node ./src/cli.js html --xml-file "$xml_file" --out-file "$html_file"
-  echo ""
-  echo "Regenerated Lark HTML:"
-  echo "  $html_file"
-  exit 0
-fi
-
 if [[ "$input" == "--push" ]]; then
   if [[ $# -lt 2 ]]; then
     echo "Missing path after --push" >&2
@@ -75,18 +51,16 @@ if [[ "$input" == "--push" ]]; then
 
   target="$2"
   if [[ -d "$target" ]]; then
-    html_file="$target/rfc.lark.html"
     rfc_file="$target/rfc.lark.xml"
     state_file="$target/lark-rfc.json"
     title="${RFC_TITLE:-RFC: $(basename "$target")}"
   else
-    html_file="$target"
-    rfc_file="${target%.lark.html}.lark.xml"
+    rfc_file="$target"
     state_file="$(dirname "$target")/lark-rfc.json"
     title="${RFC_TITLE:-RFC: $(basename "${target%.*}")}"
   fi
 
-  node ./src/cli.js push --html-file "$html_file" --rfc-file "$rfc_file" --state-file "$state_file" --title "$title"
+  node ./src/cli.js push --rfc-file "$rfc_file" --state-file "$state_file" --title "$title"
   exit 0
 fi
 
@@ -111,10 +85,6 @@ if [[ "$input" == "--from-file" ]]; then
         parse_start=$((parse_start + 1))
         scope="${!parse_start:-}"
         ;;
-      --context)
-        parse_start=$((parse_start + 1))
-        context_file="${!parse_start:-}"
-        ;;
       *)
         echo "Unknown option: $arg" >&2
         exit 1
@@ -127,7 +97,6 @@ if [[ "$input" == "--from-file" ]]; then
   mkdir -p "$out_dir"
   generate_args=(./src/cli.js generate --from-file "$prd_file" --out-dir "$out_dir")
   [[ -n "$scope" ]] && generate_args+=(--scope "$scope")
-  [[ -n "$context_file" ]] && generate_args+=(--context "$context_file")
   node "${generate_args[@]}"
 else
   url="$input"
@@ -143,10 +112,6 @@ else
       --scope)
         parse_start=$((parse_start + 1))
         scope="${!parse_start:-}"
-        ;;
-      --context)
-        parse_start=$((parse_start + 1))
-        context_file="${!parse_start:-}"
         ;;
       *)
         echo "Unknown option: $arg" >&2
@@ -173,7 +138,6 @@ else
   node ./src/cli.js pull --url "$url" --out-dir "$out_dir"
   generate_args=(./src/cli.js generate --from-file "$out_dir/prd.md" --out-dir "$out_dir")
   [[ -n "$scope" ]] && generate_args+=(--scope "$scope")
-  [[ -n "$context_file" ]] && generate_args+=(--context "$context_file")
   node "${generate_args[@]}"
 fi
 
@@ -182,7 +146,7 @@ if [[ "${PRD_TO_RFC_SKIP_PUSH:-}" == "1" ]]; then
   echo "Skipped Lark push because PRD_TO_RFC_SKIP_PUSH=1."
 elif [[ -n "${PRD_TO_RFC_PUSH_CMD:-}" ]]; then
   title="${RFC_TITLE:-RFC: $(basename "$out_dir")}"
-  node ./src/cli.js push --html-file "$out_dir/rfc.lark.html" --rfc-file "$out_dir/rfc.lark.md" --state-file "$out_dir/lark-rfc.json" --title "$title"
+  node ./src/cli.js push --rfc-file "$out_dir/rfc.lark.xml" --state-file "$out_dir/lark-rfc.json" --title "$title"
 else
   if ! lark_bin="$(resolve_lark_cli)"; then
     echo "Missing required Lark CLI for push. Expected lark-cli or lark on PATH." >&2
@@ -191,14 +155,11 @@ else
   export PRD_TO_RFC_PUSH_CMD="$lark_bin docs +create --doc-format xml --title \"{{title}}\" --content @\"{{rfc_file}}\""
   export PRD_TO_RFC_UPDATE_CMD="$lark_bin docs +update --doc \"{{doc}}\" --command overwrite --doc-format xml --content @\"{{rfc_file}}\""
   title="${RFC_TITLE:-RFC: $(basename "$out_dir")}"
-  node ./src/cli.js push --html-file "$out_dir/rfc.lark.html" --rfc-file "$out_dir/rfc.lark.xml" --state-file "$out_dir/lark-rfc.json" --title "$title"
+  node ./src/cli.js push --rfc-file "$out_dir/rfc.lark.xml" --state-file "$out_dir/lark-rfc.json" --title "$title"
 fi
 
 echo ""
 echo "Artifacts:"
 echo "  $out_dir/prd.md"
-echo "  $out_dir/rfc.md"
 echo "  $out_dir/tasks.md"
-echo "  $out_dir/rfc.lark.md"
 echo "  $out_dir/rfc.lark.xml"
-echo "  $out_dir/rfc.lark.html"

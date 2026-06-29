@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node ./src/cli.js",
-    "check": "bash -n ./run.sh ./regenerate.sh ./install.sh ./lib/lark-cli.sh && node --check ./src/cli.js && node --check ./src/lark-url.js && node --check ./src/markdown.js && node --check ./src/path.js && node --check ./src/pipeline.js && node --check ./src/shell.js",
+    "check": "bash -n ./run.sh ./install.sh ./lib/lark-cli.sh && node --check ./src/cli.js && node --check ./src/lark-url.js && node --check ./src/markdown.js && node --check ./src/path.js && node --check ./src/pipeline.js && node --check ./src/shell.js",
     "demo": "node ./src/cli.js generate --from-file ./examples/sample-prd.md --out-dir ./output/demo"
   },
   "engines": {

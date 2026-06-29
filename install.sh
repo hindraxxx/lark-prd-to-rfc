@@ -12,14 +12,12 @@ if ! lark_bin="$(resolve_lark_cli)"; then
 fi
 
 mkdir -p "$bin_dir"
-chmod +x "$repo_dir/run.sh" "$repo_dir/regenerate.sh"
+chmod +x "$repo_dir/run.sh"
 
 ln -sf "$repo_dir/run.sh" "$bin_dir/prd_to_rfc"
-ln -sf "$repo_dir/regenerate.sh" "$bin_dir/regenerate_rfc"
 
 echo "Installed:"
 echo "  $bin_dir/prd_to_rfc -> $repo_dir/run.sh"
-echo "  $bin_dir/regenerate_rfc -> $repo_dir/regenerate.sh"
 echo "  Lark CLI: $lark_bin"
 
 case ":$PATH:" in
@@ -36,4 +34,3 @@ esac
 echo ""
 echo "Try:"
 echo "  prd_to_rfc --help"
-echo "  regenerate_rfc --help"
