@@ -2,7 +2,7 @@
   "title": "RFC: Default Payment Method",
   "documentUrl": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb",
   "documentToken": "H7mudUYxloq8k3xjxiultUkCgTb",
-  "lastPushedAt": "2026-06-29T17:56:13.479Z",
+  "lastPushedAt": "2026-06-29T18:12:16.980Z",
   "lastResult": {
     "ok": true,
     "identity": "user",
@@ -10,22 +10,22 @@
       "document": {
         "new_blocks": [
           {
-            "block_id": "doxlguYurMynCH4PNqQbPiMXO5g",
-            "block_token": "WoHiwtcxGhaZ0pb3oRLlYQtQgQe",
+            "block_id": "doxlgrGYW3f1ogW786qaeChnEyf",
+            "block_token": "DQcJwGhqWha120b9lYUlbLMmg6e",
             "block_type": "whiteboard"
           },
           {
-            "block_id": "doxlgZEDsgCLhpFsQX5or1uhtIq",
-            "block_token": "ZE3xwnDFqhDSHZbkpCIllkjjgTo",
+            "block_id": "doxlgf7Zaq7KUaiB11lZYGNSsEP",
+            "block_token": "LVyOwOd8nhqTxYb9XTYlDs8WgKc",
             "block_type": "whiteboard"
           },
           {
-            "block_id": "doxlgwlRHbbBnDCrt2FYQIBdz5b",
-            "block_token": "YhSWwMMmxhTGlqb7W9elRs0Kged",
+            "block_id": "doxlgaLj3xt19alxr0neFNsdRJe",
+            "block_token": "PD4Mwwy3rhz0Nxb0nPflUc2Ggke",
             "block_type": "whiteboard"
           }
         ],
-        "revision_id": 57,
+        "revision_id": 64,
         "url": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb"
       },
       "result": "success",
@@ -33,6 +33,5 @@
     }
   },
   "rfcFile": "output/Default Payment Method/rfc.lark.xml",
-  "htmlFile": "output/Default Payment Method/rfc.lark.html",
   "stateFile": "output/Default Payment Method/lark-rfc.json"
 }
