@@ -33,15 +33,42 @@
 <p>Source: {{source}}</p>
 {{prd}}
 <h1>Current State</h1>
-<p>TODO: Describe how the relevant parts of the system work TODAY — before any changes from this RFC. Cover which services are involved, the current user/data flow, what does NOT exist, and known limitations.</p>
+<p>TODO: Describe how the relevant parts of the system work TODAY — before any changes from this RFC. Lead with the end-to-end user/data flow across services, then summarize gaps and constraints. Keep file paths out of the main prose except for 1-2 critical anchors.</p>
+<h2>Current Flow</h2>
+<p>TODO: Narrative of the existing flow from entry point to downstream service/data store, including async callbacks/events where relevant.</p>
+<h2>Current Gaps / Constraints</h2>
+<ul><li>TODO: Gap or limitation that matters for the proposed design.</li></ul>
+<h2>Evidence</h2>
+<table>
+<colgroup><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>Area</b></p></th><th><p><b>What exists today</b></p></th><th><p><b>Source</b></p></th></tr></thead>
+<tbody>
+<tr><td><p>TODO</p></td><td><p>TODO: concise fact, not full implementation notes.</p></td><td><p><code>file:line</code></p></td></tr>
+</tbody>
+</table>
 <h1>Desired State</h1>
 <p>TODO: Describe what the system looks like AFTER this RFC is fully implemented. Focus on the delta from Current State. Cover what is new, what has changed, and what has been removed or replaced.</p>
+<h1>Implementation Direction Confirmation</h1>
+<callout emoji="⚠️">Do not finalize or push this RFC while any decision below is still inferred by the agent. Discuss the choices with the requester and either record the confirmed direction or keep it as an explicit open question.</callout>
+<table>
+<colgroup><col/><col/><col/></colgroup>
+<thead><tr><th><p><b>Decision</b></p></th><th><p><b>Confirmed Direction</b></p></th><th><p><b>Owner / Evidence</b></p></th></tr></thead>
+<tbody>
+<tr><td><p>API strategy</p></td><td><p>TODO: Confirm whether to reuse/piggyback an existing API, extend an existing API, or introduce a new API. Do not assume new API creation.</p></td><td><p>TODO</p></td></tr>
+<tr><td><p>Source of truth / ownership</p></td><td><p>TODO: Confirm which service owns each state change and which service must not be called directly.</p></td><td><p>TODO</p></td></tr>
+<tr><td><p>Linking / write path</p></td><td><p>TODO: Confirm whether linking or state update is synchronous, asynchronous, callback-driven, event-driven, or manually reconciled.</p></td><td><p>TODO</p></td></tr>
+<tr><td><p>Cache strategy</p></td><td><p>TODO: Confirm whether cache is needed, cache key/value shape, TTL, invalidation trigger, and fallback behavior.</p></td><td><p>TODO</p></td></tr>
+<tr><td><p>Experiment / whitelist plan</p></td><td><p>TODO: Confirm flag/whitelist owner, targeting rule, default state, rollout phases, eligibility checks, and kill-switch behavior.</p></td><td><p>TODO</p></td></tr>
+<tr><td><p>Backfill / migration</p></td><td><p>TODO: Confirm whether existing users need backfill, lazy migration, or no migration.</p></td><td><p>TODO</p></td></tr>
+<tr><td><p>Failure and retry behavior</p></td><td><p>TODO: Confirm timeout, retry, idempotency, duplicate callback, and partial-success handling.</p></td><td><p>TODO</p></td></tr>
+</tbody>
+</table>
 <h1>In scope</h1>
 <p>TODO: Brief summary of items covered as part of the solution.</p>
 <h2>Out of scope</h2>
 <p>TODO: Brief summary of items not covered as part of the solution.</p>
 <h1>Solution</h1>
-<p>TODO: Describe the recommended implementation approach. Call out what we will be doing, what we will NOT be doing, and assumptions. Fold any repository / codebase findings here and into the per-story Technical Approach (cite file:line) — do not create a separate Repository Analysis or Implementation Context section.</p>
+<p>TODO: Describe the recommended implementation approach as an overall system design: ownership, request/data flow, state transitions, sync/async boundaries, failure handling, and assumptions. Keep code references out of the main rationale unless essential; detailed repository evidence belongs in Current State / Evidence or the per-story Technical Approach.</p>
 <h1>User Story: TODO-001 — [Story Title]</h1>
 <p><b>As</b> [actor/role], <b>I want</b> [goal or capability], <b>so that</b> [business benefit].</p>
 <h2>Acceptance Criteria</h2>
@@ -79,7 +106,7 @@ sequenceDiagram
 </tbody>
 </table>
 <h4>APIs (Optional)</h4>
-<p>TODO: API addition/changes.</p>
+<p>TODO: For every new or changed API, include owner/caller, method/path, auth boundary, request schema, success response schema, error response semantics, idempotency behavior, timeout/retry expectations, and compatibility notes. Avoid listing endpoint names without contracts.</p>
 <h4>Events / Queue Changes (Optional)</h4>
 <table>
 <colgroup><col/><col/><col/><col/><col/></colgroup>

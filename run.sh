@@ -60,6 +60,19 @@ if [[ "$input" == "--push" ]]; then
     title="${RFC_TITLE:-RFC: $(basename "${target%.*}")}"
   fi
 
+  if [[ -z "${PRD_TO_RFC_PUSH_CMD:-}" || -z "${PRD_TO_RFC_UPDATE_CMD:-}" ]]; then
+    if ! lark_bin="$(resolve_lark_cli)"; then
+      echo "Missing required Lark CLI for push. Expected lark-cli or lark on PATH." >&2
+      exit 1
+    fi
+    if [[ -z "${PRD_TO_RFC_PUSH_CMD:-}" ]]; then
+      export PRD_TO_RFC_PUSH_CMD="$lark_bin docs +create --doc-format xml --title \"{{title}}\" --content @\"{{rfc_file}}\""
+    fi
+    if [[ -z "${PRD_TO_RFC_UPDATE_CMD:-}" ]]; then
+      export PRD_TO_RFC_UPDATE_CMD="$lark_bin docs +update --doc \"{{doc}}\" --command overwrite --doc-format xml --content @\"{{rfc_file}}\""
+    fi
+  fi
+
   node ./src/cli.js push --rfc-file "$rfc_file" --state-file "$state_file" --title "$title"
   exit 0
 fi

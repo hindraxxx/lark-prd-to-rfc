@@ -2,7 +2,7 @@
   "title": "RFC: Default Payment Method",
   "documentUrl": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb",
   "documentToken": "H7mudUYxloq8k3xjxiultUkCgTb",
-  "lastPushedAt": "2026-06-29T18:12:16.980Z",
+  "lastPushedAt": "2026-06-30T00:37:27.410Z",
   "lastResult": {
     "ok": true,
     "identity": "user",
@@ -10,22 +10,22 @@
       "document": {
         "new_blocks": [
           {
-            "block_id": "doxlgrGYW3f1ogW786qaeChnEyf",
-            "block_token": "DQcJwGhqWha120b9lYUlbLMmg6e",
+            "block_id": "doxlgTKGCN8hE0okpRo8ehEAmb2",
+            "block_token": "R1Vmwht9ph8svXbSRtilTbcCgYf",
             "block_type": "whiteboard"
           },
           {
-            "block_id": "doxlgf7Zaq7KUaiB11lZYGNSsEP",
-            "block_token": "LVyOwOd8nhqTxYb9XTYlDs8WgKc",
+            "block_id": "doxlg3ls2pIrnqAiYPdvTFGR4rd",
+            "block_token": "Ht3hwEs0ShS6sXbiDVnlkdZvgBc",
             "block_type": "whiteboard"
           },
           {
-            "block_id": "doxlgaLj3xt19alxr0neFNsdRJe",
-            "block_token": "PD4Mwwy3rhz0Nxb0nPflUc2Ggke",
+            "block_id": "doxlg39s16BJhIvT8w13XfUWGet",
+            "block_token": "VpkZwFIO2hJiTXbQTPelDGbFg0b",
             "block_type": "whiteboard"
           }
         ],
-        "revision_id": 64,
+        "revision_id": 72,
         "url": "https://gotocompany.sg.larksuite.com/docx/H7mudUYxloq8k3xjxiultUkCgTb"
       },
       "result": "success",

@@ -68,3 +68,4 @@ If Lark CLI or `PRD_TO_RFC_FETCH_CMD` is not configured, URL-based `run.sh` must
   - `rfc.lark.xml` is the primary, editable RFC artifact and the reliable Lark import format (tables, code blocks, `<callout>`, `<checkbox>`, and `<whiteboard type="mermaid">` blocks). Edit this file after generation.
   - Push uses `rfc.lark.xml` so tables and mermaid render natively in Lark.
 - `.agents/skills/prd-to-rfc/SKILL.md` is the repo-local skill OpenCode should read.
+- Generated RFCs must include an Implementation Direction Confirmation checkpoint. Before finalizing or pushing, the agent must discuss any agent-inferred API strategy, service ownership/source-of-truth, sync/async linking, cache strategy, experiment/whitelist rollout, backfill/migration, or retry/idempotency behavior with the user, or leave it as an explicit TODO/Open Question.

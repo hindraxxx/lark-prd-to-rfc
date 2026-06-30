@@ -18,6 +18,7 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
    - If the input is a Lark URL, invoke `prd_to_rfc <url> <session-name>`.
    - If the user gives a change area, pass it as `--scope`, for example `--scope "Backend, Frontend"`.
    - If the user gives repository ownership or implementation hints, read the context file and fold the details into Current State / Solution / per-story Technical Approach (there is no dedicated context section in the template).
+   - Current State should explain the existing end-to-end product/system flow first. Use file references as supporting evidence, not as the structure of the section.
    - URL-based PRD pulls require Lark CLI.
    - The standard fetch command is built in; use `PRD_TO_RFC_FETCH_CMD` only to override it.
    - If the input is a file, use `prd_to_rfc --from-file <prd.md> <session-name>`.
@@ -39,11 +40,28 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
    - `rfc.lark.xml` is the primary, editable RFC artifact. After generation, edit this file.
    - Convert product requirements into engineering implications.
    - Use the requested scope to focus the RFC on backend, frontend, QA, data/analytics, release, or any other named implementation area.
-   - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC. Fold file-backed findings (with `file:line` references) directly into **Current State**, **Solution**, and the per-story **Technical Approach**. Do **not** create a dedicated "Repository Analysis" or "Implementation Context" section — the template no longer has one.
+   - When the user provides repositories to analyze, inspect those repositories before finalizing the RFC. Fold codebase findings into **Current State**, **Solution**, and the per-story **Technical Approach**. Do **not** create a dedicated "Repository Analysis" or "Implementation Context" section — the template no longer has one.
+   - **Current State structure:** start with a reader-friendly "Current Flow" narrative across services and data boundaries. Then list "Current Gaps / Constraints". Put `file:line` citations in a compact "Evidence" table, grouped by service/area. Avoid long bullets whose main content is paths, line ranges, search queries, or repository layout.
+   - **Solution structure:** explain the overall system picture first: ownership, request/data flow, state transitions, synchronous vs asynchronous boundaries, failure handling, and what is intentionally out of path. Use code references sparingly in Solution; detailed citations belong in Current State / Evidence or story-level Technical Approach.
+   - **API contract requirement:** do not list new endpoints as bullets only. For every new or changed API, include owner/caller, method/path, auth boundary, request schema, success response schema, error semantics, idempotency behavior, timeout/retry expectations, and compatibility notes. If any part is not confirmed, mark it as TODO/Open Question instead of silently omitting it.
    - Each **User Story** includes its own `<whiteboard type="mermaid">` sequence diagram describing that story's control flow across the real repository boundaries. Do not put one big diagram in a separate System Design section (that section was removed).
    - The **Technical Approach** defaults to a single approach. Only add an "Approach #2" block when there is a genuine alternative solution to weigh; otherwise keep one approach and delete the callout/note about alternatives.
    - Include non-goals, API changes, data model changes, edge cases, observability, rollout, risks, and open questions.
    - Include the implementation task checklist at the bottom of the RFC so reviewers can see the work breakdown without opening `tasks.md`.
+
+   **Implementation direction discussion gate:**
+   - Before finalizing or pushing the RFC, stop and discuss any implementation direction that is not explicit in the PRD, user prompt, or repository evidence.
+   - Do not assume a new API, new table, new cache, or new async/event flow just because it is technically plausible.
+   - Ask the requester to confirm the smallest set of decisions needed to make the RFC implementable, especially:
+     - whether to reuse/piggyback an existing API, extend an existing API, or create a new API;
+     - which service owns each state change and which service must not be called directly;
+     - whether linking/state updates are synchronous, asynchronous, callback-driven, event-driven, or reconciled later;
+     - cache need, key/value shape, TTL, invalidation trigger, fallback, and observability;
+     - experiment/whitelist owner, targeting rule, rollout phases, default state, monitoring gate, and kill switch;
+     - backfill/migration policy;
+     - timeout, retry, idempotency, duplicate callback, and partial-success behavior.
+   - Record confirmed answers in **Implementation Direction Confirmation**, **Solution**, the relevant User Story **Technical Approach**, and **Rollout Plan**.
+   - If the requester has not answered yet, keep the item as an explicit TODO/Open Question and do not present the implementation direction as decided.
 
 5. Create `tasks.md`.
    - Use `templates/tasks.md`.
@@ -51,6 +69,7 @@ Use this skill when converting a Lark PRD or exported PRD text into reviewable M
    - Each task should include acceptance criteria.
 
 6. Push back to Lark only after the XML is reviewable.
+   - Do not push while core implementation direction is still agent-inferred. Either get requester confirmation first or mark the unresolved points clearly as TODO/Open Question in the XML.
    - Push uses `rfc.lark.xml` with `lark-cli docs +create --doc-format xml` by default.
    - First push creates `output/<session>/lark-rfc.json` with the Lark RFC URL/token.
    - Later pushes update the saved RFC doc with `lark-cli docs +update --command overwrite`.
