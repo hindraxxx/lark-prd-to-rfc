@@ -1,8 +1,8 @@
 {
-  "title": "RFC: Digisign 4W - Spouse Signing",
-  "documentUrl": "https://gotocompany.sg.larksuite.com/docx/TdFCdGIGsoBUShxdKtnliXTYgOd",
-  "documentToken": "TdFCdGIGsoBUShxdKtnliXTYgOd",
-  "lastPushedAt": "2026-06-30T03:38:50.149Z",
+  "title": "RFC: 4W Spouse",
+  "documentUrl": "https://gotocompany.sg.larksuite.com/docx/ITKOdPxN2oJyeTxc67ulW6kogIg",
+  "documentToken": "ITKOdPxN2oJyeTxc67ulW6kogIg",
+  "lastPushedAt": "2026-06-30T06:07:14.404Z",
   "lastResult": {
     "ok": true,
     "identity": "user",
@@ -10,28 +10,33 @@
       "document": {
         "new_blocks": [
           {
-            "block_id": "doxlgpfKNacq1W6EN9lkXbglwag",
-            "block_token": "Q4iNwdqHnhVOcabGdnPlgvtdgif",
+            "block_id": "doxlgtEoPQRmu5JxNXcRMw4xync",
+            "block_token": "Uos4w4swvhXCnNbpHC6lQhKzgIg",
             "block_type": "whiteboard"
           },
           {
-            "block_id": "doxlgmlCDegSijTLRP67TvNPmAf",
-            "block_token": "CJpZw7036hGrULbSjwzlu8wOgJc",
+            "block_id": "doxlgkkMlGiqRBOeLNv5WPnmQKh",
+            "block_token": "PonRwBPoRhiH9obuBtfl50mOgme",
             "block_type": "whiteboard"
           },
           {
-            "block_id": "doxlgtAFymY4jSZEM1pBsyYFsMg",
-            "block_token": "A3wFwIpK8hIcKdbfDtoldJ8igUf",
+            "block_id": "doxlgD59c1CP07iOuAUcjd5cuCf",
+            "block_token": "UCucwpX7bhN0D4bKpFZlTxzCggg",
             "block_type": "whiteboard"
           },
           {
-            "block_id": "doxlg5DOFniQiTizTf3SoXX7crb",
-            "block_token": "MG4rwoT7lhQtHgbFo6RlQA6gg7f",
+            "block_id": "doxlgYh7f8F3CXOYLWflFVBMU4g",
+            "block_token": "LWqUwCmwthwX5ObjhJXlagEyglb",
+            "block_type": "whiteboard"
+          },
+          {
+            "block_id": "doxlg2AXfO7eN4A9NA4PSaauQTd",
+            "block_token": "EAlow503Bh9jzGbgm84lA1oSgUc",
             "block_type": "whiteboard"
           }
         ],
-        "revision_id": 11,
-        "url": "https://gotocompany.sg.larksuite.com/docx/TdFCdGIGsoBUShxdKtnliXTYgOd"
+        "revision_id": 27,
+        "url": "https://gotocompany.sg.larksuite.com/docx/ITKOdPxN2oJyeTxc67ulW6kogIg"
       },
       "result": "success",
       "warnings": []

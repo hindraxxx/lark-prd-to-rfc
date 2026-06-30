@@ -3,7 +3,6 @@
 Source: https://gotocompany.sg.larksuite.com/wiki/XIPawZ3hAir175kM6YYltsW7gLf
 
 ## Background
-lark-cli v1.0.60 installed successfully
 <title>Digisign 4W - Spouse Signing</title>
 
 # Digisign 4W - Spouse Signing
@@ -47,13 +46,13 @@ Another reason for implementing Digisign for 4W signing is that it has become a 
 
 #### Estimated User:
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ODEwM2JiZmFjNDM1YzQwOGJlMzEzOTJjZDdiODdkNmVfZWZiMjg1NTdkYWIwMGM4MTUxNzFhYjI5NzkxNWJmMWJfSUQ6NzY1NzAxMzY5Njk3MTEzMjY0NV8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/LUqIbOkrxoKFgKx2jgYlcyW8gTd)
 
 **95%++ of spouse phone numbers have gopay / gojek account.**
 
 
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=N2UyZjc3MmY5NGE0ZTE2MzdiOGMyN2UxZWRlNzAzNjhfZThiNmNmNGMxYWE0OTdiYzEwYzAwYzBmNzlhYzFmOWVfSUQ6NzY1NzAxMzY5NTUzMjY2NjYwMV8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/I8PKbMTimo9d7jxp98RligGYg7f)
 
 **29.7% of spouse phone numbers that have gopay / gojek account is already kyc_gopay_approved**
 
@@ -94,7 +93,7 @@ JOB TO BE DONE BY DESIGNER TEAM - ‼️ ONLY READ THIS SECTION FOR DESIGNER:
 
 DESIGN MOCK:
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=N2IxODYxMWI3NzUzNDIzYzA1ZjU3N2M3NzRkMTljM2RfYjE3MDAzMzUyZTVlMDYwMTYzOGY0MWM1ODYxZWZkMDVfSUQ6NzY1NzAxMzY5NzI3OTM0ODQ1MF8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/Asyeb2aYiovk2wxlZlelu9bZgmd)
 
 
 
@@ -129,7 +128,7 @@ Updated Flow Chart 25082025:
 1. Spouse will be whitelisted automatically for vehicle financing. (based on the phone number that BFI shared on approved callback)
 2. Everytime spouse open vf app, show spouse signing bottom sheet
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=N2RkZDFiMDRhYzZkYTczOThiNzk5NzkxYzVjMjczZGVfYWJlNmJmN2Q4YjkyODU0YTYzNDJhZTU1ZDQ0YjQzMjlfSUQ6NzY1NzAxMzY5ODQzODk1ODgyNF8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/MlDEbvqpVofLz3xRbCxlZvccg2b)
 
 1. When bottom sheet spouse signing is closed, then on every page in vf, there will be floating action button. Where if the floating action button is clicked, it will trigger the bottom sheet for spouse signing
 
@@ -172,7 +171,7 @@ Updated Flow Chart 25082025:
 2. Once one kyc sdk passed; then user will be able to access lba
 3. If one kyc sdk not passed, then user will see the same bottom sheet as when they click on the entrypoint
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=MjI2OTIyMjUwYTUzMmFmZTI5ZDNjZmNmZDE1NWI0YmRfMzE0ZGQwMWQ1MzIxZjczMDE1MmNmZWI5ODRkMDM1NWJfSUQ6NzY1NzAxMzY5Nzc2Nzg4NjU1NV8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/IpBXbEHoXozmv1xCKejlgM0Ogmc)
 
 
 
@@ -189,13 +188,13 @@ Updated Flow Chart 25082025:
    3. Show spouse name and phone number
 2. Learn more cta is to direct user to the help center article
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=NWU2OTY0MDQ4NGE1ZWQ3ZTJhMGI4OTM4N2VjODY5YTBfNGJhMDgzOWFiMzI4ZjZiYjlhNzUwN2NjZjgxZTQ0MWVfSUQ6NzY1NzAxMzY5NTc5MjY5NzA1OF8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/ToGTbcm1To87hQx4be0lDvWigpg)
 
 
 
 1. Both spouse and borrower signing is required for user to move on to the current loan processing page
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=OWJlZmY0ZTU1MWJjYzIxNTEwYzA0ODVhMzEwMzc3MjNfZTQ4NzMxZWYyMjc1YTc2NTRkNDExNmY5ZGJjOTFhOTlfSUQ6NzY1NzAxMzY5ODE2NjM2MTgyM18xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/EQrTbsbVdowUSJxJn4elMUbGgib)
 
 
 
@@ -294,7 +293,7 @@ Further action plan:
 
 ### Flowchart
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=NDhiNTE3MTE2M2VkMjUzNGE5YzQ2ZWJiOTIwNTdhN2NfMDNhZDc2NmVmYjdkNmFlY2ZiODlkNTc3YjY4MzZiZjVfSUQ6NzY1NzAxMzY5NzY2MzE2MDAzMF8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/Lf42bhwYKoNKcCxmXIdlqR9Ugug)
 
 Please refer to sheet “Fri, 12 september flowchart” [https://app.diagrams.net/#G1Dz1ZOaC8_tFwfhdeZpYv4lU0zVCMbsg-#%7B%22pageId%22%3A%22IMD9cVcbfajlU1pCpgQD%22%7D](https://app.diagrams.net/#G1Dz1ZOaC8_tFwfhdeZpYv4lU0zVCMbsg-#%7B%22pageId%22%3A%22IMD9cVcbfajlU1pCpgQD%22%7D) 
 
@@ -340,7 +339,7 @@ Please refer to sheet “Fri, 12 september flowchart” [https://app.diagrams.ne
 1. Spouse will be whitelisted automatically for vehicle financing. (based on the phone number that BFI shared on approved callback)
 2. Everytime spouse open vf app, show spouse signing bottom sheet
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=MWE3NmJiYjY5OWEyYjFiOWNlZjA2MjQwMjEwNDU2YzZfZTgwNmEwNWY1ZGUzZmNiYzQ1ODY5Njk4YWQzNzQxODRfSUQ6NzY1NzAxMzY5NTY5MjAxNzM3NF8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/RAyhba6C1oe0KcxgWEWlZhY0gCg)
 
 1. When bottom sheet spouse signing is closed, then on every page in vf, there will be floating action button. Where if the floating action button is clicked, it will trigger the bottom sheet for spouse signing
 
@@ -390,19 +389,39 @@ Please refer to sheet “Fri, 12 september flowchart” [https://app.diagrams.ne
    3. Show spouse name and phone number
 2. Learn more cta is to direct user to the help center article
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=NWY3NzQ0ZWNjY2FiMjI1YzQzOTEzODIyMWMyMzY0ZjlfYmMyY2NmODM3NzE2MTUxYTFlMzIzMGVkOGY3Mjk0NTJfSUQ6NzY1NzAxMzY5NDg4Njg5MTIzOF8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/XOxObxAvKoeY6oxfMJClkKg1g7a)
 
 
 
 1. Both spouse and borrower signing is required for user to move on to the current loan processing page
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=MzU2ZGQzZDk0OTM5NGQ2ZTlkN2Y0YzQ4OGViNzZiNGFfYzQwZWQ2NTU4ZDZjODAzOTE2ZWE0MjQ4NzYxNjhiNGFfSUQ6NzY1NzAxMzY5ODM2MzQ5NDEwOV8xNzgyNzg5OTA0OjE3ODI3OTM1MDRfVjM)
+![](https://feishu.cn/file/LeLKbE0gnoLpCzx0xazlY95sgVc)
 
 ## Goals
-- TODO: Confirm product goals.
+- Enable digisign for 4W (CAR) borrowers, including spouse signing when required by BFI.
+- Replace the manual (wet sign) LBA signing process for 4W with a seamless in-app digisign flow.
+- Unlock 4W top-up eligibility (BFI compliance requires spouse signing).
+- Track digisign funnel conversion and signing latency for both borrower and spouse.
 
 ## Requirements
-- TODO: Extract concrete requirements from source PRD.
+- **BFI approved callback extension (Backend):** Receive spouse data (full name, phone number, e-KTP number, date of birth, place of birth) and spouse LBA on the BFI approved callback. If BFI does not send spouse data, spouse signing is not required.
+- **Spouse auto-whitelist (Backend):** Automatically whitelist the spouse for vehicle financing based on the phone number BFI shares on the approved callback.
+- **Spouse signing entrypoint (Backend → Frontend):** Expose spouse signing info (borrower name hash, loan expiry, signing status) so the spouse app can show a bottom sheet / floating action button entrypoint.
+- **Spouse KYC (Backend):** Call OneKYC SDK for the spouse when they click the signing entrypoint. Only allow LBA access after OneKYC passes.
+- **Spouse digisign (Backend):** Initiate spouse LBA digisign after KYC passes. Handle spouse digisign callback.
+- **Borrower status tracking (Backend → Frontend):** Expose spouse signing status (signed / not signed), expiry date, spouse name and phone number to the borrower.
+- **Notifications (Backend):** Send PN and WhatsApp to the spouse when signing is required, plus daily reminders starting D+1 at 10 AM from the approved callback date.
+- **Signing sequence:** Borrower and spouse signing can happen in parallel. Lender signing takes place after both borrower and spouse signing are complete.
+- **Edge cases:** One spouse correlated to multiple borrowers → FIFO entrypoint ordering. Only 1 spouse per borrower. No spouse data changes once passed to MAB.
+- **Scope:** 4W (CAR product type) only. All user groups (DRIVER, CONSUMER, MERCHANT).
+- **Rollout:** Percentage rollout to merchant + driver user groups first, then consumer.
 
 ## Open Questions
-- TODO: Confirm ambiguous behavior with PM/design/engineering.
+- **BFI callback payload:** What is the exact JSON contract for spouse data in the approved callback? (field names, nesting, whether a separate `isSpouseSigningRequired` flag is sent or inferred from presence of spouse data) — TODO: confirm with BFI.
+- **Spouse LBA document:** Does BFI generate a separate LBA document for the spouse, or does the spouse sign the same LBA as the borrower? The PRD says "generate LBA for borrower and spouse" which implies separate documents — TODO: confirm with BFI.
+- **Spouse KYC rejected:** PRD says "Wet Sign (outside of the app)" but the backend behavior is unclear. Should the loan fall back to wet sign for both borrower and spouse? — TODO: confirm with PM/BFI.
+- **Spouse phone number → gopay account matching:** How is the spouse's phone number matched to a gopay account when the spouse opens the VF app? Is there an existing lookup service? — TODO: confirm with platform team.
+- **Spouse digisign partner config:** Does BFI/Digisign provide a separate signature partner for spouse, or is the borrower partner reused? — TODO: confirm with BFI/Digisign.
+- **LBA expiration:** Can the expiration time differ between borrower and spouse LBA? PRD says "aiming to be the same" — TODO: confirm with BFI.
+- **Spouse KYC in survey:** Can the spouse do KYC during the VD survey instead of in the VF app? — TODO: confirm with Goto/BFI.
+- **WA content and CTA deeplink:** PN titles are defined but WhatsApp content and CTA deeplinks are TBD — TODO: confirm with PM.
