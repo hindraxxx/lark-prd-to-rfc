@@ -62,6 +62,20 @@ Context:
 Please generate the RFC, inspect those repos, fill Repository Analysis with file-backed findings, include a Mermaid diagram, and put implementation tasks at the bottom of the RFC.
 ```
 
+Another sample prompt:
+
+```text
+Use prd-to-rfc for this PRD:
+https://gotocompany.sg.larksuite.com/wiki/XIPawZ3hAir175kM6YYltsW7gLf
+Feature: Digisign 4W - Spouse Signing
+Session name: 4W Spouse
+Scope: Backend only
+Context:
+- Gather the requirement and changes from this repository: /Users/liem.sanjaya/gtf/gpl/vehicle-finance-api-provider
+- For the approach, reuse the existing API /v1/loans/latest to get the information for spouse.
+Please generate the RFC, inspect the repository, fold file-backed findings into Current State, Solution, and Technical Approach, include per-story Mermaid sequence diagrams, and put implementation tasks at the bottom of the RFC.
+```
+
 The workflow writes generated artifacts under:
 
 ```text
