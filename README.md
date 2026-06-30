@@ -46,6 +46,26 @@ export LARK_CLI_BIN=/path/to/lark-cli
 
 The Lark CLI login must have permission to read the PRD and create/update the RFC document.
 
+### Required Lark Scopes
+
+Lark uses granular, incrementally-accumulated scopes — each `lark-cli auth login --scope "..."` only grants what you name, so request them explicitly. The scopes below are needed for this workflow:
+
+| Operation | Scope |
+|-----------|-------|
+| Read PRD / RFC document content | `docx:document:readonly` |
+| Create / update RFC document | `docx:document:write_only`, `docx:document:create` |
+| Download / upload document media | `docs:document.media:download`, `docs:document.media:upload` |
+| Read document comments | `docs:document.comment:read` |
+| Add / reply / resolve / delete comments | `docs:document.comment:create`, `docs:document.comment:write_only`, `drive:drive.metadata:readonly` |
+
+Authorize in one go (scopes accumulate):
+
+```bash
+lark-cli auth login --scope "docx:document:readonly docx:document:write_only docx:document:create docs:document.media:download docs:document.media:upload docs:document.comment:read docs:document.comment:create docs:document.comment:write_only drive:drive.metadata:readonly"
+```
+
+Comment read and comment write are separate scopes — granting read does not grant resolve/delete, and vice versa.
+
 ## 3. Trigger The Workflow
 
 Send your agent a prompt like this:
