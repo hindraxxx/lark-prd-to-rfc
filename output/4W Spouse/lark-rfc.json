@@ -1,0 +1,42 @@
+{
+  "title": "RFC: Digisign 4W - Spouse Signing",
+  "documentUrl": "https://gotocompany.sg.larksuite.com/docx/TdFCdGIGsoBUShxdKtnliXTYgOd",
+  "documentToken": "TdFCdGIGsoBUShxdKtnliXTYgOd",
+  "lastPushedAt": "2026-06-30T03:38:50.149Z",
+  "lastResult": {
+    "ok": true,
+    "identity": "user",
+    "data": {
+      "document": {
+        "new_blocks": [
+          {
+            "block_id": "doxlgpfKNacq1W6EN9lkXbglwag",
+            "block_token": "Q4iNwdqHnhVOcabGdnPlgvtdgif",
+            "block_type": "whiteboard"
+          },
+          {
+            "block_id": "doxlgmlCDegSijTLRP67TvNPmAf",
+            "block_token": "CJpZw7036hGrULbSjwzlu8wOgJc",
+            "block_type": "whiteboard"
+          },
+          {
+            "block_id": "doxlgtAFymY4jSZEM1pBsyYFsMg",
+            "block_token": "A3wFwIpK8hIcKdbfDtoldJ8igUf",
+            "block_type": "whiteboard"
+          },
+          {
+            "block_id": "doxlg5DOFniQiTizTf3SoXX7crb",
+            "block_token": "MG4rwoT7lhQtHgbFo6RlQA6gg7f",
+            "block_type": "whiteboard"
+          }
+        ],
+        "revision_id": 11,
+        "url": "https://gotocompany.sg.larksuite.com/docx/TdFCdGIGsoBUShxdKtnliXTYgOd"
+      },
+      "result": "success",
+      "warnings": []
+    }
+  },
+  "rfcFile": "output/4W Spouse/rfc.lark.xml",
+  "stateFile": "output/4W Spouse/lark-rfc.json"
+}
