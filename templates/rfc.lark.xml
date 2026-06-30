@@ -2,9 +2,9 @@
 <table>
 <colgroup><col/><col/></colgroup>
 <tbody>
-<tr><td><p>Authors</p></td><td><p>TODO: add authors</p></td></tr>
-<tr><td><p>Reviewers</p></td><td><p>TODO: add reviewers</p></td></tr>
-<tr><td><p>Approvers</p></td><td><p>TODO: add approvers</p></td></tr>
+<tr><td><p>Authors</p></td><td><p><span style="background-color:#FFF2CC">TODO: fill in manually</span></p></td></tr>
+<tr><td><p>Reviewers</p></td><td><p><span style="background-color:#FFF2CC">TODO: fill in manually</span></p></td></tr>
+<tr><td><p>Approvers</p></td><td><p><span style="background-color:#FFF2CC">TODO: fill in manually</span></p></td></tr>
 <tr><td><p>Linked Jira Epic</p></td><td><p>TODO: add epic link</p></td></tr>
 <tr><td><p>Linked PRD</p></td><td><p>{{source}}</p></td></tr>
 <tr><td><p>Requested Change Scope</p></td><td><p>{{scope}}</p></td></tr>
@@ -106,7 +106,29 @@ sequenceDiagram
 </tbody>
 </table>
 <h4>APIs (Optional)</h4>
-<p>TODO: For every new or changed API, include owner/caller, method/path, auth boundary, request schema, success response schema, error response semantics, idempotency behavior, timeout/retry expectations, and compatibility notes. Avoid listing endpoint names without contracts.</p>
+<p>TODO: For every new or changed API, include owner/caller, method/path, auth boundary, idempotency behavior, timeout/retry expectations, compatibility notes, and request/success/error schemas. Put request and response examples in code blocks, not tables.</p>
+<h5>API Contract: TODO endpoint name</h5>
+<p><b>Owner / Caller:</b> TODO: service owner / caller.</p>
+<p><b>Method / Path:</b> TODO: <code>GET|POST /path</code>.</p>
+<p><b>Auth Boundary:</b> TODO: authentication and authorization boundary.</p>
+<p><b>Idempotency:</b> TODO: read-only, idempotency key, duplicate callback behavior, or retry-safe state transition.</p>
+<p><b>Timeout / Retry:</b> TODO: caller timeout, retry policy, downstream fallback.</p>
+<p><b>Compatibility:</b> TODO: backwards compatibility and client rollout notes.</p>
+<p><b>Request:</b></p>
+<pre lang="json"><code>{
+  "todo": "request schema or omit this block for read-only API"
+}</code></pre>
+<p><b>Success Response:</b></p>
+<pre lang="json"><code>{
+  "todo": "success response schema"
+}</code></pre>
+<p><b>Error Response:</b></p>
+<pre lang="json"><code>{
+  "code": "TODO_ERROR_CODE",
+  "message": "TODO: user-safe or internal error message",
+  "retryable": false
+}</code></pre>
+<p><b>Error Semantics:</b> TODO: status codes and business meanings, for example 400 validation error, 401/403 auth failure, 404 missing resource, 409 invalid state, 5xx downstream failure.</p>
 <h4>Events / Queue Changes (Optional)</h4>
 <table>
 <colgroup><col/><col/><col/><col/><col/></colgroup>
