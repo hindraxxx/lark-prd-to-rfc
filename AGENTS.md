@@ -25,6 +25,13 @@ output/<session-name>/rfc.lark.xml
 output/<session-name>/lark-rfc.json
 ```
 
+## Read-Only Intent Guardrail
+
+- Treat requests to "check", "inspect", "review", "analyze", "gather info from", "look at", or "understand" a repo/path as read-only by default.
+- If the user references another repo/path and the requested outcome is ambiguous, gather information and report findings instead of editing or generating code.
+- Do not make repository changes unless the user explicitly asks to implement, edit, generate, commit, or otherwise modify files.
+- If wording could plausibly mean either "make changes in this repo" or "gather information from that repo", ask a short clarification question before touching files.
+
 ## Rules For Changes
 
 - Always update the latest workflow documentation when changing CLI behavior.
